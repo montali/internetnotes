@@ -1,0 +1,17 @@
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+res/.DS_Store
+res/teoria/.DS_Store
+*.dvi
+*.glg
+*.glo
+*.gls
+*.ist
+.DS_Store
+*.bbl
+*.blg
+
