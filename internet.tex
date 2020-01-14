@@ -486,4 +486,41 @@ Alcune guidelines per il design REST:
     \item Documentare le risposte in modo completo 
     \item Se vi sono azioni aggiuntive possibile, includere l'URL nella risposta.
 \end{enumerate}
+\section{P2P}
+\subsection{Introduzione}
+Il paradigma \textbf{peer-to-peer} permette a 2 o più entità di collaborare spontaneamente in una rete di pari (peers) utilizzando informazioni appropriate e sistemi di comunicazione, senza necessità di coordinamento centrale. Un sistema P2P è un tipo particolare di sistema distribuito, ossia un HW o SW contenente più di un elemento di processazione, storage, processi concorrenti, programmi multipli. Distinguiamo tra 3 tipi di sistemi peer-to-peer:
+\begin{itemize}
+    \item Sistemi peer-to-peer in cui ogni peer è posseduto da un utente, che vi interagisce per mezzo di una UI 
+    \item Reti peer-to-peer in cui peer autonomi gestiscono risorse, sensori e attuatori per fornire servizi agli utenti 
+    \item Sistemi peer-to-peer ibridi in cui alcuni peer sono posseduti da utenti, mentre altri sono autonomi
+\end{itemize}
+Le attività di un sistema peer-to-peer sono gestite dall'environment e dai feedback interni. Gli input dell'ambiente coinvolgono solitamente un piccolo numero di peers; quando un peer riceve un input, la sua struttura interna mappa un input ad un output. Il processo di mapping potrebbe richiedere al peer di cooperare con altri peer, scambiando messaggi per trovare e consumare risorse. \textbf{Reazioni localizzate seguono input localizzati.}
+La reazione di un peer ad input diretti o indiretti dall'ambiente è definita dalla sua struttura interna, che può essere basata su regole statiche condivise dai peer (protocolli), oppure su un piano adattivo che determina modifiche strutturali in risposta ai cambiamenti dell'environment. 
+\subsubsection{Variabili di stato}
+Un sistema P2P è una rete di peer; quando un peer si aggiunge, si connette agli altri per mezzo di una strategia predeterminata. Le connessioni possono cambiare nel tempo. Un peer condivide risorse: siano essere banda, cache, cpu, storage, file, servizi, applicazioni. Alcuni peer contribuiscono in minima parte consumando molte risorse: questi sono detti free riders. Distinguiamo tra risorse replicabili e risorse consumabili: le prime possono essere spostate o copiate da un peer all'altro (file, dati...), mentre le seconde non possono essere acquisite per copia, ma solo utilizzate contrattando con gli host (memoria, CPU, applicazioni, servizi). 
+Raggruppiamo i servizi in due categorie: servizi distribuiti (che coinvolgono più peers), e servizi locali (unità funzionali esposte da peers che permettono accesso remoto alle loro risorse locali). 
+Ogni peer ha una lifetime $L$, modellabile considerando i seguenti fattori: ruolo del peer, disponibilità di risorse, imprevisti. Abbiamo alcune variabili misurabili sul peer stesso: utilizzo delle risorse, tempo di risposta, query hit ratio. Altre variabili vengono settate dal peer: dimensione della routing table e strategia di riempimento, algoritmo di routing dei messaggi, banda in upload e download. 
+Utilizziamo \textbf{modelli stocastici} per studiare la distribuzione delle risorse e la loro popolarità. 
+I nodi in un network P2P non costituiscono una popolazione vera e propria, in quanto la loro crescita non dipende dalla riproduzione dei nodi; i nodi si aggiungono o lasciano per ragioni imprevedibili. 
+\paragraph{Design issues} La topologia, struttura e centralizzazione della rete, il message routing e meccanismo di location sono alcune delle problematiche cruciali per il design di una rete P2P. Recentemente, la ricerca sui sistemi P2P si è concentrata sul design di schemi di overlay robusti (che definiscono regole per il bootstrapping, la connettività, il message routing, il caching). Alcuni problemi di efficienza:
+\begin{itemize}
+    \item Scalabilità
+    \item Bootstrapping (avvio)
+    \item Gestione della connettività
+    \item Performance di richiesta
+    \item Consistenza 
+    \item Stabilità
+    \item Distribuzione del carico 
+    \item Banda asimmetrica
+\end{itemize}
+Problemi di sicurezza:\begin{itemize}
+    \item Attacchi passivi: eavesdropping, analisi del traffico
+    \item Attacchi attivi: spoofing, man in the middle, playback/replay, local data alteration, no forwarding, free riding, ddos, network poisoning
+    \item Trust management
+\end{itemize}
+Nei sistemi P2P, l'information placement gioca un ruolo importante nella decisione dello schema di overlay; le informazioni sulle risorse condivise possono essere pubblicate su un server centrale, pubblicate agli altri peer, salvate localmente e non pubblicate. Introduciamo 3 modelli di overlay scheme: Hybrid Model, Decentralized Unstructured Model (DUM), Decentralized Structured Model (DSM). Inoltre, citiamo il Layered Model (LM) in cui i peer sono raggruppati in strati, ognuno dei quali ha uno schema. 
+\paragraph{Hybrid Model} Nel modello ibrido, i peers si connettono a uno o più server centrali dove pubblicano informazioni riguardanti le risorse che condividono. Ogni server centrale mantiene, per ogni risorsa, la lista di possessori, in alcuni casi replicando parzialmente le liste degli altri server. Dopo la richiesta di un peer, la directory centrale fornisce la lista dei peer che matchano la richiesta, o il peer migliore in termini di banda/disponibilità. Le interazioni seguenti sono poi tra il provider e il consumer. Se il server centrale non è unico, le query potrebbero essere inoltrate ai server vicini. 
+\paragraph{Decentralized Unstructured Model} Ogni peer propaga richieste ai peers connessi direttamente, sefuendo una qualche strategia, per esempio il flooding, strategia che consuma molta banda ma è efficiente in comunità limitate. Per migliorare la scalabilità si può utilizzare il caching delle ricerche recenti, insieme al probabilistic flooding (ogni peer propaga il messaggio a un numero random di vicini). In più, se un'identità unica è aggiunta al messaggio, i nodi possono eliminare duplicati dello stesso messaggio, evitando la formazione di loops. In network grandi è necessario aggiungere qualche meccanismo di Time To Live per evitare il totale flooding della rete.
+\paragraph{Decentralized Structured Model} Qui, un protocollo consistente a livello glovale si assicura che ogni nodo possa inoltrare una ricerca al peer che ha la risorsa desiderata, anche se la suddetta è rara. È per questo necessario un pattern molto più strutturato di overlay links. Il tipo più utilizzato è il Distributed Hash Table (DHT), dove ogni risorsa deve essere identificata da una chiave unica e associata ad una descrizione (includente un puntatore al possessore della risorsa). Ogni peer riceve un ID random nello stesso spazio delle resource keys, ed è responsabile del salvataggio dei pairs di un sottoinsieme limitato dell'intero key space. Per la pubblicazione, viene associata alla descrizione di una risorsa un pair \code{<key, value>}, e la risorsa viene inviata al peer con l'ID più simile all'ID della risorsa ricorsivamente, finché l'ID più vicino non è quello attuale. Per il lookup, poi, le query vengono propagate verso il peer con l'ID più simile a quello della risorsa desiderata.
+\paragraph{Layered Overlay Schemes} Nelle architetture layered, i peer sono raggruppati in strati, ognuno dei quali ha uno schema dei suddetti. L'interazione tra strati è definita da un protollo specifico dell'applicazione. Un esempio tipico è quello a 2 layer, dove i peer con banda e potenza maggiore funzionano da \textbf{supernodi}, assumendo la responsabilità di propagare i messaggi, mentre i peer con capacità minori sono semplicemente fornitori e consumatori di risorse, e devono connettersi al supernode layer per pubblicare/trovare risorse condivise. 
 \end{document}
