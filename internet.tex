@@ -50,6 +50,7 @@ Gli \textbf{URI} (\textit{Uniform Resource Identifiers}) sono utilizzati in HTTP
 \end{itemize}
 Distinguiamo tra HTTP non-persistent, dove abbiamo un invio di risorsa alla volta, e persistent HTTP, dove più risorse vengono inviate attraverso una singola connessione TCP. Consideriamo il cosiddetto \textbf{Round Trip Time} (RTT): nella prima sono richiesti 2 RTT per risorsa (apertura connessione, invio risorsa), mentre la seconda lascia la connessione aperta, e quindi riduce il numero di RTT richieste. Inoltre, la seconda permette il \textbf{pipelining}, ossia l'invio di più richieste alla volta allo scopo di ridurre i tempi, senza attendere le risposte.
 \begin{figure}[H]
+    \centering
     \includegraphics[width=0.6\linewidth]{res/pipelining.png}
 \end{figure}
 Un messaggio HTTP è formato da request/status line, header, body. Una request line è composta da \code{metodo target versioneHTTP}. Una status line è \code{versioneHTTP statusCode reasonPhrase}. Gli headers sono in formato MIME e specificano i metadati della richiesta come data, versione MIME, encoding, connessione, proxy/gateway, content-type, content-length, encoding, linguaggio, scadenza, data di modifica\dots Termina sempre con un carriage return (\code{\\r\\n}). 
@@ -134,4 +135,39 @@ Inoltre, è possibile utilizzare i file \code{.htaccess} per definire cambiament
 Su \href{https://www.youtube.com/watch?v=dFUlAQZB9Ng}{sistemi Unix} httpd viene eseguito come daemon continuamente; se la directive Listen è sulla porta 80, è necessario avviare Apache come root perché è una porta speciale (poi verranno lanciati child processes). Lanciamo Apache con l'\code{apachectl} control script, che setta le variabili ENV necessarie e poi avvia httpd. Se l'avvio è succesful, il server viene detacchato dalla console (scusate). Si può usare apachectl per terminare Apache, o killare il daemon.
 \subsection{HTML}
 Il web è basato su tre risorse: gli URI, i protocolli, e HTML. \textbf{HTML} è un linguaggio universale che permette la creazione di documenti con formattazioni, contenuti, link, design. Nasce dalla mente di Tim Berners-Lee e conta attualmente 5 versioni major, la cui ultima è 5.2. Per promuovere l'interoperabilità, ogni documento HTML deve specificare il suo character set, formato da repertorio e code positions. Inoltre, va specificato l'encoding nell'header delle richieste HTTP. Distinguiamo tra 3 parti: una linea di versione HTML, un header, un corpo. Nell'header possiamo trovare varie tipologie di tag: \code{TITLE}, \code{BASE}, \code{LINK}, \code{SCRIPT}, \code{STYLE}, \code{META}. Nel corpo, possiamo trovare DIV (block-level) e SPAN (inline). Un heading descrive l'argomento della sezione che introduce (H1..H6 in base all'importanza). Abbiamo anche alcuni tag per il testo: \code{BR} va a capo, \code{P} delimita un paragrafo, \code{PRE} delimita un testo preformattato, \code{EM}, \code{STRONG}, \code{CITE}, \code{DFN}, \code{CODE}, \code{SAMP}, \code{KBD}, \code{VAR}, \code{ABBR}, \code{ACRONYM}, \code{BLOCKQUOTE}, \code{Q}, \code{SUB}, \code{SUP}. Possiamo creare liste: \code{UL} (\textit{Unordered List}), \code{OL}(\textit{Ordered List}), \code{DL}(\textit{Definition List}). Possiamo creare tabelle: \code{TABLE, TR, TD}. Possiamo spaziarle utilizzando \code{rowspan} e \code{colspan}, captionarle con \code{CAPTION}. Possiamo creare links con il tag \code{A}, avente attributi \code{href} e \code{target}(\_blank, \_self, \_parent, \_top). Dando ID agli elementi HTML possiamo cercarli tramite gli anchor link (\#riferimento). Con l'elemento \code{IMG} embeddiamo immagini definite nell'attributo \code{src}. Con \code{OBJECT} definiamo oggetti come risorse, applets, plugin. Con i frame possiamo generare views multiple; un frame ha head, frameset e body, con attributi rows e cols. Possiamo anche creare forms, che contengono contenuto, markup, controlli, labels e li inviano ad un'action (tramite GET o POST). In HTML5 sono stati inoltre definiti nuovi tag, semantici (header, footer, article, section) , di controllo (numeri, date, orari, calendari, range), grafici (svg, canvas), multimediali (audio, video). Non sono più supportati i frames, sostituiti dagli iframes.
+\subsection{CSS}
+HTML non è nato per contenere tag di definizione di stile, ma piuttosto per mostrare dati. Quando cominciarono a venire aggiunti tag di stile ad HTML 3.2, come \code{font}, \code{color}, si capì che non poteva funzionare. Il World Wide Web Consortium (W3C) creò quindi \textbf{Cascading File Sheets} (CSS). In HTML4, tutta la formattazione poté quindi essere definita separatamente dall'HTML, dando la possibilità di modificare l'intero sito con un solo sito web. 
+\subsubsection{Sintassi}
+La sintassi consiste in un selettore, seguito da varie dichiarazioni:
+\begin{center}
+    \code{h1 \textbraceleft}
+    \code{color:blue;}
+    \code{font-size:12px;}
+    \code{\textbraceright}
+\end{center}
+Il selector punta all'elemento HTML desiderato, mentre nel blocco di dichiarazione inseriamo una o più dichiarazioni separate da ;.
+I selettori possono indicare una tipologia HTML, come \code{p}, una classe, come \code{.rowDiv}, un ID, come \code{\#title}. Possiamo includere CSS in tre modi:
+\begin{itemize}
+    \item Style sheet esterno: \code{<LINK rel="stylesheet" type="text/css" href="file.css">}
+    \item Style sheet interno: \code{<STYLE> body\textbraceleft\textbraceright</STYLE>}
+    \item Inline: \code{<H1 style="color:blue;">}
+\end{itemize}
+\subsubsection{Attributi notevoli}
+Alcuni attributi importanti:
+\begin{itemize}
+    \item \textbf{Background}: background-color, background-image, background-repeat, background-attachment, background-position
+    \item \textbf{Text}: color, text-align, text-decoration, text-transform, text-indent
+    \item \textbf{Fonts}: permette di definire una font family (generica o specifica) con sistema fallback: le prova in ordine finché non trova la funzionante; è quindi meglio partire con specifica e terminare con generica. Oltre a font-family, abbiamo font-style (italic, oblique), font-size, font-weight
+    \item \textbf{Links}: possiamo applicare ogni CSS property, ed in più abbiamo 4 selector speciali (A:link, A:visited, A:hover, A:active)
+    \item \textbf{Lists}: possiamo settare i marker delle liste, o addirittura immagini come item markers con list-style-image 
+    \item \textbf{Tables}: possiamo specificare i borders tramite la proprietà border, e anche width/height. Inoltre, anche text-align e vertical-align sono disponibili.
+\end{itemize}
+
+\subsubsection{Box model}
+In CSS sfruttiamo il \textit{pattern} del box model: essenzialmente è ciò che wrappa un contenuto, che ci permette di aggiungere padding, bordi, margini. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{res/boxmodel.png}
+\end{figure}
+
 \end{document}
