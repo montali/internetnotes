@@ -169,5 +169,36 @@ In CSS sfruttiamo il \textit{pattern} del box model: essenzialmente è ciò che 
     \centering
     \includegraphics[width=0.6\linewidth]{res/boxmodel.png}
 \end{figure}
-
+\subsection{XML}
+Sembrerà un linguaggio inutile e passato (perché lo è), ma nella sezione SOA ci sono ben due lezioni che si basano su sto schifo. \textit{Ocio.} XML sta per \textbf{eXtensible Markup Language} e serve per trasportare informazioni, non per presentarli (come HTML). I tag non sono definiti in uno standard, ma dall'utente. Possiamo, per esempio sfruttare XML per separare i dati variabili da HTML. 
+\paragraph{Quando usare XML?} XML semplifica il salvataggio e la condivisione di dati, essendo un formato standard basato su testo. Semplifica i cambiamenti di piattagorma, essendo testo semplice. Tra i linguaggi scritti in XML, citiamo SVG, WSDL, RSS.
+\subsubsection{Struttura}
+Il documento XML inizia con il prologo, che definisce la versione XML. Comincia poi l'albero, che ha una root e delle leaves. I figli sullo stesso livello sono detti siblings (fratelli). Tutti i figli possono avere un contenuto e degli attributi. In XML è illegale omettere il tag di chiusura (tranne ovviamente nel prologo). I tag XML sono \textbf{case sensitive}. Gli attributi devono essere sempre tra virgolette. I commenti sono come in HTML: \code{<!-- Commentino -->}. XML non tronca gli spazi bianchi come HTML, e salva le nuove linee come \code{LF}. Bisogna stare attenti ad alcuni caratteri, come $<$, che vanno escapati con sequenze specifiche: \&gt;, \&amp, \&apos, \&quot;. Gli elementi XML devono seguire alcune regole di nomenclatura:
+\begin{itemize}
+    \item Case sensitivity
+    \item Inizio con lettera o underscore
+    \item Non si può iniziare con "XML"
+    \item Possono contenere lettere, numeri, trattini, underscore, punti
+    \item Non possono contenere spazi 
+    \item Le lettere accentate non sono un problema (ma occhio ai software)
+\end{itemize}
+Gli attributi solitamente forniscono informazioni che non sono parte dei dati, ad esempio, se avessimo un contenuto file, l'attributo potrebbe essere il filetype. Alcuni problemi degli attributi:
+\begin{itemize}
+    \item Non possono contenere valori multipli
+    \item Non possono contenere alberi 
+    \item Non sono facilmente espansibili
+\end{itemize}
+Per evitare conflitti di nomi, possiamo utilizzare dei prefissi di namespace con l'attributo xmlns:
+\begin{verbatim}
+<h:table xmlns:h="http://www.w3.org/TR/html4/"> 
+    <h:tr>
+        <h:td>Apples</h:td>
+        <h:td>Bananas</h:td>
+    </h:tr>
+</h:table>
+\end{verbatim}
+Dopo aver definito un namespace, tutti i contenuti con quel prefisso verranno collegati al namespace. Definire un namespace di default è utile: ci evita di utilizzare prefissi in tutti i children. 
+Possiamo utilizzare anche caratteri internazionali: è però importante specificare l'encoding nel prolog. 
+\subsubsection{Validità e document types}
+Un documento XML corretto è detto \textit{ben formato}. Un documento XML valido deve essere compatibile ad una \textbf{document type definition}. Ne abbiamo due diverse: DTD (\textit{Document Type Definition}) e XML Schema (\textit{basata su XML}). Usiamo questi document type per vari scopi: decidere standard, verificare dati dall'esterno, verificare dati nostri. XML non lo richiede per forza, ma in ambienti di produzione ci vuole. Lo scopo di un DTD è definire la struttura, con una lista di elementi validi. Possiamo anche usarlo per definire caratteri speciali e stringhe di caratteri. L'\textbf{XML Schema} è un'alternativa basata su XML a DTD.
 \end{document}
