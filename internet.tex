@@ -296,4 +296,25 @@ Elenchiamo ora alcuni framework importanti.
 \paragraph{Meteor} Permette sviluppo rapido e semplice di applicazioni end-to-end performanti. 
 
 Citiamo inoltre alcuni IDE: WebStorm, Atom, VSCode (spacca), Brackets.
+\subsection{Server side - NodeJS}
+\textbf{Node} è una piattaforma costruita sul Chrome JavaScript runtime che fornisce un'API asincrona con I/O non-blocking che lo rende leggero ed efficiente. Il programma può richiedere una risorsa e continuare con il suo lavoro, poi una callback gestisce il risultato. Il giochino è lo stesso delle richieste HTTP su jQuery, semplicemente ora accediamo a un filesystem e non ad una risorsa remota. Node è designed per \textbf{data-intensive real-time}(DIRT) applications. È creato per essere responsive e per avere consistenza tra browser e server, reimplementando oggetti comuni come la Timer API e la Console API, aggiungendo un core set di moduli per network e file I/O: HTTP, POSIX (filesystem), DB\dots
+
+Per rendere una pagina disponibile, ad esempio, ci basterà fare:
+\begin{verbatim}
+var http = require('http');
+http.createServer(function (req, res) { res.writeHead(200, {'Content-Type': 'image/png'}); fs.createReadStream('./image.png').pipe(res);
+}).listen(3000);
+console.log('Server running at http://127.0.0.1:3000/');
+\end{verbatim}
+I dati sono letti dal file tramite uno stream, ed inviati al client (.pipe)
+\subsubsection{Modularità}
+È più facile navigare nel codice se è organizzato con directory e file separati. Il sistema di moduli di Node fornisce un meccanismo potente per organizzare il codice. I moduli ci permettono di selezionare quali funzioni e variabili del file incluso sono esposte all'applicazione tramite \code{exports}. \textbf{Node Package Manager} (npm) è una collezione online di moduli node. I moduli possono essere singoli file o directories; se è una directory, il file principale sarà index.js, a meno che non specifichiamo diversamente nel package.json. Per utilizzare il metodo, sfruttiamo la funzione \code{require} di Node, che prende un path come argomento. Require è una delle poche operazioni I/O sincrone di Node. 
+\subsubsection{Programmazione asincrona}
+Le \textbf{callbacks} definiscono la logica da eseguire al completamento di un'operazione. Gli event emitters firano eventi. Una callback è una funzione, passata come argomento ad una funzione asincrona, che descrive cosa fare dopo. Una caratteristica importante è che la maggior parte dei moduli di Node usano callbacks con due argomenti: err e res, il primo riempito solo in caso di errore. Gli \textbf{event emitters} firano gli eventi; molti componenti di Node, come i server HTTP o TCP e gli stream, sono implementati come event emitters, customizzabili con \code{channel.emit()}. 
+\subsubsection{Sequenziare logiche asincrone}
+Durante l'esecuzione di un programma asincrono, ci sono alcune task che possono accadere in ogni momento, mentre altre devono accadere solo prima o dopo altre. Il concetto di sequenziare gruppi di task asincrone è detto \textbf{flow control}, di cui distinguiamo due tipi: serial e parallel. 
+\paragraph{Serial} Per implementare il flow control seriale, creiamo un array di tasks e lo attraversiamo una alla volta, grazie a un metodo \code{next(err, result)}, che chiameremo in fondo ad ogni funzione, e che shifta l'array ogni volta.  
+\paragraph{Parallel} Anche qui, aggiungiamo le funzioni a un array dinamicamente, ad esempio scorrendo un albero di file, poi le facciamo partire in parallelo.
+\subsubsection{Node e MySQL}
+Possiamo utilizzare MySQL con Node installando il modulo corretto da npm. Poi, basta creare un oggetto connection da cui possiamo chiamare il metodo \code{connection.query(query, callback(err, rows, fields))}, che contiene le rows di risposta, scorribili con un for. Questa funzione query ha anche degli eventi 'error', 'fields', 'result', triggerati ad ogni risultato. Possiamo pausare la query per eseguire operazioni prima di proseguire coi risultati, tramite \code{connection.pause()} e \code{connection.resume()}. Connection ha inoltre un evento 'close', triggerato quando la connessione si chiude, volutamente o no. Possiamo controllare se 'err' è istanziato nella callback, in modo da catchare eventuali errori.
 \end{document}
