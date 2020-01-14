@@ -7,6 +7,8 @@
 \usepackage{amsfonts}
 \usepackage{hyperref}
 \usepackage{glossaries}
+\usepackage{dirtytalk}
+
 %\makeglossaries
 %\newglossaryentry{magic}{
 %    name={magic number},
@@ -317,4 +319,171 @@ Durante l'esecuzione di un programma asincrono, ci sono alcune task che possono 
 \paragraph{Parallel} Anche qui, aggiungiamo le funzioni a un array dinamicamente, ad esempio scorrendo un albero di file, poi le facciamo partire in parallelo.
 \subsubsection{Node e MySQL}
 Possiamo utilizzare MySQL con Node installando il modulo corretto da npm. Poi, basta creare un oggetto connection da cui possiamo chiamare il metodo \code{connection.query(query, callback(err, rows, fields))}, che contiene le rows di risposta, scorribili con un for. Questa funzione query ha anche degli eventi 'error', 'fields', 'result', triggerati ad ogni risultato. Possiamo pausare la query per eseguire operazioni prima di proseguire coi risultati, tramite \code{connection.pause()} e \code{connection.resume()}. Connection ha inoltre un evento 'close', triggerato quando la connessione si chiude, volutamente o no. Possiamo controllare se 'err' è istanziato nella callback, in modo da catchare eventuali errori.
+\section{Service Oriented Architectures}
+La \textbf{Service-Oriented Architecture} è lo stile architetturale prevalente nei correnti middleware per sistemi informativi distribuiti.
+L'obiettivo principale è permettere ad agenti debolmente coupled e software di cooperare. Un servizio è una work unit svolta da un provider, per ottenere un risultato richiesto da un consumer.
+\paragraph{Servizio} Il servizio è una procedura, metodo o oggetto con interfaccia pubblica e stabile, invocabile da un client. Può essere considerato come la caratterizzazione astratta e incapsulamento dell'interfaccia di un contenuto/risorsa specifico.
+\paragraph{Service Interface} Una \textbf{service interface} è definita in termini di \textbf{protocollo utilizzato} per interagire, \textbf{formato} dei dati scambiati, \textbf{comportamento atteso} dopo lo scambio di alcuni messaggi.
+\paragraph{Ciclo di vita di un servizio} Un servizio ha 3 fasi di vita:
+\begin{enumerate}
+    \item \textbf{Creazione}: il servizio viene pubblicato in una directory o con advertisements
+    \item \textbf{Procurement}: il provider e il consumer stabiliscono un service provision contract, tramite discovery e negotiation
+    \item \textbf{Enactment}: il servizio è utilizzato
+\end{enumerate}
+\paragraph{Ruoli} La SOA è basata sull'interazione tra 3 ruoli: provider, registry, consumer.
+\paragraph{Quality of Service} La stessa service interface può corrispondere a diverse implementazioni, con provider differenti e QoS diverse. La QoS è collegata ad aspetti non funzionali, tra cui performance, disponibilità, robustezza, autorizzazioni necessarie, costi. Provider e consumer devono stabilire un Service Level Agreement (SLA), che è un agreement di QoS. 
+\subsection{XML-based Services}
+Un XML-based service è un servizio implementato al web application layer, basato su un set di tecnologie XML-based. Nella maggior parte delle specifiche standard, i servizi XML-based sono detti \textbf{Web Services}.
+La definizione formale vuole che: \say{Un web service è un componente software progettato per supportare interazione macchina a macchina in rete. Ha un'interfaccia definita in un formato processabile da macchine (WSDL). Altri servizi interagiscono in una maniera decisa dalla descrizione, tramite messaggi SOAP, tipicamente convogliati tramite HTTP con serializzazione XML.}
+Insomma: se un componente software ha un'interfaccia descritta in WSDL ed interagisce con un client scambiando messaggi SOAP, è un web service. I web services permettono alle applicazioni di cooperare attraverso il web, in modo distribuito, platform-independent, programming language independent.
+Quali sono le caratteristiche uniche dei web services?
+\begin{itemize}
+    \item Basato su XML
+    \item Loosely-coupled: un consumer non è strettamente legato allo specifico web service 
+    \item Coarse-grained: un pezzo di business logic 
+    \item Permette composizione al volo di nuove funzionalità, composizione, decomposizione, distribuzione su larga scala.
+\end{itemize}
+3 standard definiscono gli elementi critici dei web services: \textbf{Simple Object Access Protocol} (SOAP), protocollo per lo scambio di messaggi, \textbf{Web Service Description Language} (WSDL), linguaggio di descrizione di service interfaces, \textbf{Universal Description, Discovery, Integration} (UDDI), protocollo per l'elencazione di servizi in una directory.
+\paragraph{Architettura WS, prima generazione} Qui, gli RPC-style web services sono interface driven, tightly coupled (i parametri sono descritti nel WSDL e non in uno schema esterno XML), sincroni. Invece, i document-style sono document-driven e loosely coupled: processano input XML, eseguono operazioni sui payload, costruiscono e inviano output XML. Questi sono asincroni, con potenziale per strutture complesse. 
+\paragraph{Architettura WS, seconda generazione} Qui, SOAP, WSDL e UDDI non bastano più: si cominciano a implementare soluzioni per sicurezza message-level, transazioni cross-service, messaggi affidabili, orchestration, estensioni... Etichettiamo le nuove specifiche come \textbf{WS-*}, come ad esempio WS-Security. 
+\subsubsection{SOAP}
+SOAP fu inizialmente pensato per risolvere il gap tra le piattaforme di comunicazione RPC-based. Venne poi evoluto in un protocollo di comunicazione per web services, con un formato di messaggi standard: documenti XML capaci di hostare RPC (Remote Procedure Call) ma anche document-centric data. La specifica SOAP copre 4 aspetti:
+\begin{itemize}
+    \item Formato di messaggi basato su XML per comunicazione unidirezionale e stateless 
+    \item Descrizione di come un messaggio SOAP (che è un file XML) deve essere trasportato su HTTP o SMTP 
+    \item Regole per la gestione di messaggi SOAP e la classificazione delle entità coinvolte: quali parti devono essere lette da chi, cosa fare in caso di errori 
+    \item Convenzioni per le RPC e l'invio di risposte, per gli RPC-style WS. 
+\end{itemize}
+Ogni messaggio SOAP è costituito da un'envelope che contiene dati, diviso in due parti: header (opzionale e divisibile in blocchi) e body (obbligatorio e divisibile in blocchi). SOAP non specifica come utilizzare queste due parti, ma solitamente l'header contiene dati utili al SOAP middleware, mentre il body contiene dati per l'applicazione. 
+Lo schema è così composto:
+\begin{verbatim}
+<?xml version="1.0"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2001/12/soap-envelope" 
+soap:encodingStyle="http://www.w3.org/2001/12/soap-encoding">
+    <soap:Header> 
+    ... 
+    </soap:Header>
+    <soap:Body> 
+    ...
+        <soap:Fault> 
+        ... 
+        </soap:Fault>
+    </soap:Body>
+</soap:Envelope>
+\end{verbatim}
+Il namespace soap serve per distinguere le versioni di soap, e definisce la struttura. L'attributo \code{encodingStyle} è utilizzato per definire i data types utilizzati nel documento. L'attributo può apparire su ogni elemento SOAP, e si applica ai contenuti dell'elemento e a tutti i child. 
+L'\textbf{header opzionale} contiene informazioni application specific, come autenticazione, pagamenti, riguardanti il messaggio SOAP. Se è presente dev'essere il primo elemento dell'Envelope. SOAP non definisce quali informazioni devono stare nell'header, ma supporta l'uso di attributi che specifichino quali nodi devono processare un message block:
+\begin{itemize}
+    \item \textbf{role}: URI del role che ha il permesso di processare il message block. Può essere application-defined, o uno tra: "none" (informazione propagata senza processarla), "next" (ogni nodo che riceve il messaggio può processare il blocco), "ultimateReceiver" (il blocco può essere processato solo dall'ultimo receiver)
+    \item \textbf{mustUnderstand}: utilizzato per indicare se un'header entry è obbligatoria o opzionale per il destinatario
+    \item \textbf{relay}: determina se un blocco dell'header è relayabile se non processato
+\end{itemize}
+Quindi, ogni nodo sul path del messaggio controlla il role associato ad ogni blocco: esso decide chi è responsabile per il blocco. Se il blocco non ha ruoli, il default è ultimateReceiver. Se mustUnderstand + attivo, il nodo con ruolo specificato deve processare il blocco o generare una fault. Se relay è attivo, un nodo che lo processa deve inoltrarlo (altrimenti potrebbe rimuoverlo). L'uso di relay insieme a next è utile per stabilire informazioni persistenti sul message path. 
+\paragraph{SOAP Body} Il body contiene gli elementi effettivamente utili all'endpoint. Potremmo ad esempio avere una richiesta fatta così:
+\begin{verbatim}
+<?xml version="1.0"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2001/12/soap-envelope" 
+ soap:encodingStyle="http://www.w3.org/2001/12/soap-encoding">
+    <soap:Body>
+        <m:GetPrice xmlns:m="http://www.w3schools.com/prices">
+            <m:Item>Apples</m:Item>
+        </m:GetPrice>
+    </soap:Body>
+</soap:Envelope>
+\end{verbatim}
+E una relativa risposta:
+\begin{verbatim}
+<?xml version="1.0"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2001/12/soap-envelope" 
+ soap:encodingStyle="http://www.w3.org/2001/12/soap-encoding">
+    <soap:Body>
+        <m:GetPriceResponse xmlns:m="http://www.w3schools.com/prices">
+            <m:Price>
+                1.90
+            </m:Price> 
+        </m:GetPriceResponse>
+    </soap:Body>
+</soap:Envelope>
+\end{verbatim}
+L'elemento opzionale SOAP fault è utilizzato per indicare messaggi di errore, ed è infatti contenente errori e status. Se è presente, deve essere un child del Body e può apparire una sola volta. Contiene due elementi obbligatori: \textbf{Code} che specifica la categoria di errore (tra Sender, Receiver, MustUnderstand, VersionMismatch, DataEncodingUnknown), e \textbf{Reason}, un messaggio di errore human-readable. Inoltre, può opzionalmente avere \textbf{Detail}, \textbf{Node}, \textbf{Role}.
+\paragraph{SOAP binding} La specifica SOAP definisce la struttura dei messaggi, non come sono scambiati. Questo gap è colmato dai SOAP bindings, meccanismi che permettono ai messaggi SOAP di essere scambiati efficacemente. HTTP è il più usato. Una richiesta SOAP HTTP ha due header obbligatori: Content-Type e Content-Length. SOAP può utilizzare GET e POST. Il SOAP Binding utilizza gli stessi status code di HTTP. Ancora attenzione a differenze tra RPC style e document style: nel primo, il client invia una richiesta contenente il nome del metodo e i parametri, ottenendo in risposta un messaggio SOAP utilizzabile per ricreare oggetti. Nella seconda, il body contiene uno o più documenti XML, senza constraint su come devono essere strutturati: per questo l'applicazione deve occuparsi del mapping dei valori a XML. 
+\paragraph{Limitazioni di SOAP} SOAP ha alcune limitazioni: prime fra tutte l'utilizzo di HTTP e XML, poco ottimizzati e poco performanti. In più, è molto generico e semplice, con mancanze in sicurezza, transazioni, accounting, e sono quindi necessarie altre specifiche, ad esempio WS-Security, WS-Coordination o WS-Transactions.
+
+\subsubsection{WSDL}
+Un documento WSDL (\textbf{Web Services Description Language}) descrive un web service, specificandone la location ed i metodi. Ogni documento WSDL ha una parte astratta (data types, messaggi, operazioni esposte) ed una parte concreta (descrive bindings e service endpoints). Quindi, la parte astratta contiene:
+\begin{itemize}
+    \item \code{<types>} definisce in XML i data types utilizzati 
+    \item \code{<message>} definisce i messaggi utilizzati
+    \item \code{<operation>} descrive un'azione offerta dal web service, in termini di input/output 
+    \item \code{<portType>} descrive un set di operazioni: one-way (input ma non output), request-response (input+output), solicit-response(invia una richiesta e attende risposta), notification (output). 
+\end{itemize}
+Mentre la parte concreta:
+\begin{itemize}
+    \item \code{<binding>} specifica il protocollo e il data format per ogni portType 
+    \item \code{<port>} specifica un indirizzo endpoint 
+    \item \code{<service>} è un set di ports
+\end{itemize}
+\paragraph{Binding} Il \textbf{binding} definisce il formato dei messaggi e i dettagli del protocollo dei messaggi (in particolare, SOAP)per le operazioni e i messaggi di un particolare portType. Un portType può avere bindings multipli. L'attributo \code{name} deve essere unico nel documento WSDL, \code{type} indica il portType a cui il binding è riferito. L'elemento \code{soap:binding} ha due attributi: style e transport. Style può essere "rpc" o "document", transport indica il protocollo, es. HTTP. Per ogni operazione esposta da un portType bisogna definire la corrispondente azione SOAP. È anche necessario specificare l'encoding: "encoded" o "literal". 
+\paragraph{Port} Un elemento \textbf{port} definisce un singolo service endpoint, specificante un unico binding address. Il valore di \textbf{name} deve essere unico nel documento WSDL; un service può avere una o più ports. Se più ports appartengono allo stesso portType, sono intese come alternative: hanno stesso comportamento ma binding differenti. Un consumer, consultando le ports del servizio, trova i portTypes che può utilizzare.
+\paragraph{WSDL 2.0} In WSDL 2.0, abbiamo dei pattern di scambio di messaggi: In-Only (input singolo, niente faults), Robust In-Only (input singolo, possibili fault), In-Out(A come input, B output uguale a fault message in caso di errori)
+\subsubsection{UDDI}
+\textbf{Universal Description, Discovery and Integration} è uno standard directory services, che permette ai software agents il dynamic binding (discovery e use) di Web Services. Permette di trovare i servizi necessari tra quelli disponibili, fornendo informazioni su come chiamarli. La registrazione di servizi e la discovery sono basate su messaggi SOAP: l'UDDI registry è infatti realizzato come un web service.  
+Distinguiamo tre operazioni principali di un directory service:
+\begin{itemize}
+    \item \textbf{Registration}: un provider di servizi registra i nomi e indirizzi dei suoi servizi 
+    \item \textbf{Removal}: un provider di servizi rimuove un servizio
+    \item \textbf{Lookup}: un consumer cerca informazioni su servizi disponibili
+\end{itemize}
+Le informazioni contenute in un UDDI registry possono essere classificate in base al loro scopo: white pages (business name, descrizione, contatti, identifiers), yellow pages (categorizzazioni industriali), green pages (informazioni tecniche). 
+Le informazioni core usate da un UDDI registry sono definite in vari schemi XML; un UDDI business registry contiene:
+\begin{itemize}
+    \item businessEntity: informazioni sul business, businessKey (identifier unico, UDID), identifierBag (altri business identifier), categoryBag (business categories)
+    \item businessService: servizi forniti
+    \item bindingTemplate: definisce come connettersi/comunicare, descrive un'istanza di un web service a un particolare indirizzo (URL), descrive il tipo di web service offerto riferendosi ai tModels, parametri, impostazioni
+    \item tModel: dettagli tecnici, reference a WSDL
+\end{itemize}
+\paragraph{UDDI API} UDDI fornisce API per inquiry e pubblicazione, costruite su SOAP. I record UDDI sono identificati da UUIDs da 16 byte. 
+\subsubsection{Sicurezza dei Web Services}
+Grazie alla sua natura (connessioni loosely coupled) e all'accesso aperto (HTTP), un SOA aggiunge nuovi requirements di sicurezza, come autenticazione, autorizzazione, privacy, integrità.
+\paragraph{Autenticazione} L'identità utente dev'essere verificata sulla base delle credenziali presentate (di vario tipo, has/knows/is).
+\paragraph{Autorizzazione} Fornire accesso a risorse basandosi sui diritti di un utente loggato. 
+\paragraph{Confidenzialità, privacy} Tenere le informazioni segrete, criptando i messaggi e offuscando le parti coinvolte.
+\paragraph{Integrità, non repudiation} Assicurarsi che un messaggio rimanga inalterato durante il transito facendo firmare digitalmente i messaggi a chi li invia. 
+\paragraph{Altri requirements di sicurezza} Possiamo aver bisogno anche di mediazione di credenziali, service capabilities/constraints. Spesso i WS si affidano a Public Key Infrastructures (PKI), che sono set di ruoli, policies e procedure necessarie all'utilizzo di certificati e public-key encription. 
+\paragraph{Public-key Encription} La public-key encription consiste nel criptare il messaggio con la chiave pubblica del ricevitore, che può decrittare il messaggio con la sua private key. Con la private key si può anche firmare digitalmente il messaggio, utilizzando la private per verificare la firma. I WS richiedono servizi di sicurezza al livello transport e applicativo.   
+\paragraph{Transport-level security} La TLS è il protocollo più utilizzato per la comunicazione transport-level, fornendo autenticazione, confidenzialità, integrity, secure key exchange. TLS fornisce un canale di comunicazione sicuro, ma quando i dati non sono in movimento non sono sicuri. 
+\paragraph{Application-level security} La signature assicura la non-repudiation dell'entità che firma, e prova che i messaggi non sono stati alterati. \textbf{WS-Security} è un set di estensioni SOAP per implementare message integrity e confidenzialità dei Web Services. WS-Security fornisce profili per 5 security tokens: username, X.509, Kerberos, SAML, REL.
+\paragraph{SAML} È un linguaggio XML-based per lo scambio di informazioni di sicurezza tra online business partners. SAML convoglia informazioni di autenticazione in forma di assertions tra soggetti. Include 3 parti: SAML assertion (autenticazione e autorizzazione), Protocol (richiesta e invio di assertions), SAML bindings and profiles (mappa assertion SAML ai framework utilizzati).
+Un'assertion, a grandi linee, è interpretabile come \textit{"L'assertion A, generata al tempo T dall'issuer R, assicura che il soggetto S rispetta le condizioni C".} Riassumendo:
+\begin{enumerate}
+    \item \textbf{Transport security} per proteggere il canale di comunicazione tra consumer e provider 
+    \item \textbf{Application-level security} per assicurare la confidenzialità criptando digitalmente il messaggio, l'integrità con la firma digitale, autenticazione/autorizzazione con username, X.509, SAML o altri token.
+\end{enumerate}
+\subsection{Servizi RESTful}
+REST sta per \textbf{REpresentational State Transfer} e indica un protocollo di comunicazione stateless, client-server, chacheable. Ha in realtà due significati:
+\begin{itemize}
+    \item Il significato puro vede REST come uno stile architetturale, indipendente da HTTP e dal web. Può essere utilizzato con HTTP, ma non necessariamente.
+    \item Il significato comune indica come REST è usato normalmente: chiamate HTTP tra macchine con web server standard, per postare dati, leggere dati, eliminare dati. Insomma, REST usa HTTP per tutte le operazioni CRUD.
+\end{itemize}
+REST è un'alternativa leggera a meccanismi come RPC e servizi XML-based, che nonostante la semplicità ha tutte le feature necessarie. REST non è uno standard: non ha specifiche W3C. 
+Alcune componenti REST:
+\begin{itemize}
+    \item Le \textbf{risorse} sono l'elemento chiave di un vero design RESTful. Le risorse individuali sono identificate in richieste, utilizzando ad esempio URL. Le risorse effettive sono separate dalle rappresentazioni restituite al client. Per esempio, una risposta in JSON non significa che il server utilizzi file JSON. 
+    \item Un \textbf{web di risorse}, nel senso che una risorsa singola non deve essere grande e contenere troppi dettagli, ma piuttosto contenere link alle informazioni addizionali (come una pagina web)
+    \item Nessun connection state: le interazioni sono \textbf{stateless}, ogni nuova richiesta deve avere tutte le informazioni necessarie 
+    \item Le risposte devono essere \textbf{cacheable} quando possibile, sfruttando gli header di cache-control HTTP
+    \item Possibilità di utilizzare \textbf{server proxy} per migliorare performance e scalability
+    \item Platform independency
+    \item Language independency
+    \item Standards based
+    \item Nessuna sicurezza built-in, ma possibilità di aggiungerla sopra HTTP 
+\end{itemize}
+Possiamo inviare richieste tramite GET e POST (qui, aggiungendo anche header per parametri), ottenendo risposte XML, CSV o JSON. Non è accettabile inviare risposte in HTML. Gli \textbf{endpoints} sono funzioni disponibili attraverso l'API; una route è il nome che utilizziamo per accedere agli endpoints, usata nell'URL, e può avere più endpoints assegnati. Ad esempio, su una route potremmo avere un endpoint GET, uno PUT, e uno DELETE. 
+Alcune guidelines per il design REST:
+\begin{enumerate}
+    \item Non usare URL fisici (con file extension finale)
+    \item Non ritornare overload di dati, piuttosto usare meccanismo di paging 
+    \item Documentare le risposte in modo completo 
+    \item Se vi sono azioni aggiuntive possibile, includere l'URL nella risposta.
+\end{enumerate}
 \end{document}
