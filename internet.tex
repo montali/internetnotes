@@ -658,9 +658,62 @@ Ogni nodo pubblicante richiede un tempo di attesa da una time source hardware si
 Ouroboros fa parte degli \textbf{Eventual Consensus PoS} protocols, nei quali viene applicata una sorta di \textit{longest-chain rule}. Ouroboros implementa un semplice, sicuro, \textbf{multi-party computation} per generare randomness, assicurando tempi e comunicazioni sincrone, persistenza e liveness se i malintenzionati hanno stake minoritari, sono soggetti a corruption delay, e lo stake si sposta ad un rate limitato. 
 \paragraph{Modello di comunicazione} Qui, i partecipanti hanno clock sincronizzati, ed il tempo è diviso in slots. Ogni messaggio inviato da un giocatore onesto è inviato a tutti i players nello stesso time slot. Tutta la comunicazione onesta è quindi via broadcast, e le parti malintenzionate potrebbero inviare messaggi arbitrati a subset arbitrari, arrivando a tempi arbitrari. Per cominciare, breve overview del protocollo, organizzato in epoche, ossia sequenze di R slot. La \textbf{stake distribution} è uno snapshot dell'epoca precedente. La \textbf{randomness} è data dall'output dell'esecuzione dell'MPC nell'epoca precedente. Lo \textbf{slot leader} è l'unico player che ha il permesso di creare un blocco in quello slot. La \textbf{leader schedule} (sequenza di slot leader) è sampled ustilizzando stake distribution e randomness dall'epoca precedente.
 \subsubsection{Singola epoca, caso statico}
-Cominciamo con il caso più semplice: un'epoca di lunghezza R, con stake statico e randomness ideale. Si parte con un genesis block, contenente le public keys dei players, la stake distribution, una stringa random per la leader election. Vogliamo computare la leader schedule per l'epoca, basata sulle informazioni sopracitate. I leaders sono determinati dalla stringa random, ognuno di loro avendo probabilità di estrazione pari alla percentuale di stake investita sul totale. In questo caso, una blockchain valida parte con un genesis block, ha una sequenza di blocchi che seguono quello di genesis, associati con slot numbers che aumentano (possono esistere slot senza blocchi), in cui non abbiamo transazioni in conflitto, e dove ogni blocco è firmato da $L_i$, ossia il leader per quel particolare slot. Un blocco ha un payload transazionale, committa a un blocco precedente, è posizionato in uno slot e firmato dal leader giusto. Per ogni slot collezioniamo tutte le transazioni, tutte le blockchains broadcastate, eliminando quelle invalide e mantenendo la più lunga; se siamo leader aggiungiamo un nuovo blocco con le transazioni alla fine, lo firmiamo e lo broadcastiamo. 
+Cominciamo con il caso più semplice: un'epoca di lunghezza R, con stake statico e randomness ideale. Si parte con un genesis block, contenente le public keys dei players, la stake distribution, una stringa random per la leader election. Vogliamo computare la leader schedule per l'epoca, basata sulle informazioni sopracitate. I leaders sono determinati dalla stringa random, ognuno di loro avendo probabilità di estrazione pari alla percentuale di stake investita sul totale. Questo grazie al meccanisco \textit{Follow The Satoshi}, grazie al quale si cerca una parte atomica di un coin. In questo caso, una blockchain valida parte con un genesis block, ha una sequenza di blocchi che seguono quello di genesis, associati con slot numbers che aumentano (possono esistere slot senza blocchi), in cui non abbiamo transazioni in conflitto, e dove ogni blocco è firmato da $L_i$, ossia il leader per quel particolare slot. Un blocco ha un payload transazionale, committa a un blocco precedente, è posizionato in uno slot e firmato dal leader giusto. Per ogni slot collezioniamo tutte le transazioni, tutte le blockchains broadcastate, eliminando quelle invalide e mantenendo la più lunga; se siamo leader aggiungiamo un nuovo blocco con le transazioni alla fine, lo firmiamo e lo broadcastiamo. 
+\subsubsection{Passaggi}
+Ricapitolando, abbiamo tre passaggi:
+\begin{enumerate}
+    \item \textbf{Determinare la slot leadership}: tramite il seed generato, andiamo a cercare tra i coin degli stakeholder una corrispondenza con l'hash, secondo il meccanismo Follow the Satoshi
+    \item \textbf{Slot leader: creare il blocco}
+    \item \textbf{Determinare la catena valida più lunga}: adottiamo una catena se è più lunga dell'attuale ma ne mantiene il prefisso
+\end{enumerate}
+A fine epoca, determiniamo un nuovo seed per il random e la distribuzione degli stake.
 \subsubsection{Malintenzionati}
- Un malintenzionato in Ouroboros ha alcuni vantaggi: conosce infatti l'intera sequenza di leader in anticipo, e può generare più blocchi per slot senza costi. Questo, però, non aumenta il sup potere: la stringa caratteristica random è binomialmente distribuita con parametro $(1-\epsilon)/2$. 
+ Un malintenzionato in Ouroboros ha alcuni vantaggi: conosce infatti l'intera sequenza di leader in anticipo, e può generare più blocchi per slot senza costi. Questo, però, non aumenta il suo potere: la stringa caratteristica random è binomialmente distribuita con parametro $(1-\epsilon)/2$. Un malintenzionato potrebbe inviare ad honest parties dei blocchi falsi, creando dei fork.
+\subsubsection{Proprietà desiderate}
+La persistenza e liveness sono permesse da 3 proprietà elementari:
+\begin{itemize}
+    \item \textbf{Common Prefix}: due catene $C_1$ $C_2$ possedute da onesti. C'è un valore $k$ per cui, rimuovendo gli ultimi $k$ blocchi da una, otteniamo il prefisso dell'altra.
+    \item \textbf{Chain Quality}: una catena $C$ posseduta da onesto. Degli ultimi $k$ blocchi, il rateo di blocchi originati da malintenzionati è al massimo $(1-\mu)$, con $\mu$ detto coefficiente di qualità
+    \item \textbf{Chain Growth}: una catena $C$ posseduta da onesto, cresce ad un rateo di $\tau k$ blocchi ogni $k$ slot.
+\end{itemize}
+Anche nell'impostazione più semplice, possiamo ottenere dei forks, ma verranno esclusi tramite agreement su un blocco (CP). 
+\subsubsection{Caso dinamico}
+Consideriamo il caso dinamico, in cui la stake distribution varia, ed ogni epoch richiede la sua stringa random $\rho$. L'idea è utilizzare un MPC sicuro per generare la randomness, e usare la blockchain stessa come mezzo. L'MPC genererà clean randomness se la maggioranza dei partecipanti sono onesti. Utilizziamo per questo \textbf{Publicly Verifiable Secret Sharing (PVSS)}, protocollo per un dealer+players, in cui il dealer parte con un valore segreto, produce degli share criptati ed una prova che mostra che i criptati sono effettivamente i valori random. I players possono verificare la validità grazie alla chiave pubblica del dealer. Dividiamo quindi in due fasi:
+\begin{itemize}
+    \item Deal: ogni player genera una stringa random e posta i PVSS-shares della stringa sulla blockchain 
+    \item Recover: i giocatori che hanno ottenuto le share prendono quelle valide e ne fanno lo XOR.
+\end{itemize}
 
- No basta questa parte la faccio un'altra volta
+\subsection{Ouroboros Praos}
+\textbf{Ouroboros Praos} è una versione che aumenta la sicurezza in un modello di comunicazione semi-sincrono, nonostante corruzioni fully-adaptive, grazie a una leader selection locale/privata, firme key-evolving, blockchain hashing per dirty randomness. 
+\subsubsection{Processo}
+Qui, i partecipanti hanno orologi sincronizzati ed i soliti slot di tempo. Ogni messaggio inviato da un player è inviato a tutti gli honest player entro $\Delta$ slots. Malintenzionati potrebbero inviare messaggi arbitrati avendo controllo sui delay. $\Delta$ è sconosciuto al protocollo. La sicurezza degrada aumentando $\Delta$. 
+\subsubsection{Tool di Praos}
+\paragraph{Local, private leader selection} Qui, utilizziamo Verifiable Random Functions, per calcolare e verificare. Ogni partecipante fa i calcoli, e se è il leader prova a convincere gli altri.
+Questo porta a slot vuoti o multi-leader, e richiede estensioni dell'analisi dei fork. Il rateo di slot vuoti è un parametro di protocollo. Il semisync permette slot più brevi.
+\paragraph{Key-evolving signatures} Le KES sono schemi speciali di firma, dove pk rimane lo stesso, sk viene aggiornato ad ogni step, ed è impossibile forgiare vecchie firme con chiavi nuove. Infatti, subito dopo la firma di un blocco, il partecipante aggiorna la sua sk.
+\paragraph{Hashing} Risolve il rejection sampling: ogni blocco contiene un valore VRF aggiuntivo dallo slot leader, si possono hashare per ottenere i leader di un'intera epoca alla volta. Aumentiamo così il costo computazionale. (??)
+
+\subsection{ALGORAND}
+Algorand fa parte dei \textbf{Blockwise-BA protocols}, che ottengono l'immutabilità di ogni singolo blocco tramite esecuzione completa di un protocollo di \textit{Byzantine Agreement}.
+\subsubsection{Byzantine Problem}
+Lo scenario è quello di un attacco a una città, con generali da varie parti e messaggeri che ne permettono la comunicazioni. L'attacco ha successo solo se tutti attaccano insieme; due problemi possibili, generali che sbagliano o messaggeri corrotti. Per risolvere il problema, il generale i-esimo invia il suo valore di $v(i)$ agli altri generali. Quando l'i-esimo generale ha deciso tutti i $v(j), j \neq i$ utilizza la maggioranza per prendere la decisione finale. 
+\subsubsection{Soluzione} 
+Silvio Micali (premio Turing), inventa un modello per la soluzione. I giocatori hanno tutti un set di chiave pubblica+privata. Uno di loro ottiene randomicamente il permesso di creare il blocco, altri mille random lo verificano. Parliamo di tentative e final consensus. Abbiamo un random bit detto \textit{magic coin}, ed i peer settano il loro valore $b_i$ di validità in base a quanti consensi ricevono: se è a maggioranza ($2t+1$ con t numero di malicious players) 0, setta $b_i$ a 0, altrimenti 1. Se non c'è maggioranza, setta $b_i$ al valore del magic coin. Possiamo anche utilizzare un \textit{concrete coin} tramite hashing dei valori. Con il primo, l'agreement avviene con $1/2$, col concrete $1/3$. Come avviene l'estrazione? Tramite una lotteria ad estrazione locale: ognuno dei peer verifica se è tra la commissione, se sì, ottiene un \textit{winning ticket} calcolato con la sua chiave privata. Invia poi la sua opinione ai peer, assieme al winning ticket.
+
+\subsubsection{Ricapitolando: BBA*}
+Abbiamo un protocollo $\mathcal{P}$ così costruito:
+\begin{enumerate}
+    \item Ogni $i$ invia $b_i$ a tutti i players, incluso se stesso
+    \item Un magic coin casuale $c^{(\gamma)}$ appare, visibile a tutti
+    \item Ogni giocatore aggiorna il suo $b_i$ così: se il numero di consensi ricevuti è $\ge 2t+1$, 1, se il numero di rifiuti è $\ge 2t+1$,0, altrimenti lo setta a $c^{(\gamma)}$
+\end{enumerate}
+Si esegue per $\gamma=0,1,...$ un protocollo $\mathcal{P}$'$(y)$ consistente in 3 esecuzioni di $\mathcal{P}$:
+\begin{enumerate}
+    \item Una prima esecuzione con $c^{(\gamma)}=0$, ed i peer onesti che inviano un valore $0*$ e si fermano se decidono per 0
+    \item Una seconda esecuzione con $c^{(\gamma)}=1$, peer onesti che inviano un valore speciale $1*$ e si fermano se decidono per 1
+    \item Una terza esecizione con $c^{(\gamma)}$ randomico.
+\end{enumerate}
+Le prime due esecuzioni assicurano che, una volta raggiunto l'agreement su un bit $b$, ogni player onesto $i$ possa saperlo. 
+
 \end{document}
