@@ -1,0 +1,135 @@
+\documentclass[11pt]{article}
+\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{hyperref}
+\usepackage{glossaries}
+\usepackage{dirtytalk}
+
+\usepackage[normalem]{ulem}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\numpy}{{\tt numpy}}    % tt font for numpy
+\topmargin -.5in
+\textheight 9in
+\oddsidemargin -.25in
+\evensidemargin -.25in
+\textwidth 7in
+\begin{document}
+
+% ========== Edit your name here
+\author{Simone Montali\\monta.li}
+\title{Riassunti di Crittografia - Tecnologie Internet}
+
+\maketitle
+
+\medskip
+\section{Concetti generali}
+Prima di tutto, definiamo il significato di \textbf{computer security}: la protezione applicata ad un sistema informativo con lo scopo di ottenere integrità, disponibilità e confidenzialità delle risorse. Emerge un concetto molto importante: la \textbf{CIA triad}, ossia confidenzialità, integrità, availability. (ricordiamo però altri due obiettivi: autenticità e accountability).
+\subsection{CIA Triad}
+\subsubsection{Confidentiality}
+La confidentiality ha l'obiettivo di preservare restrizioni sull'accesso alle informazioni, inclusa la privacy personale ed informazioni proprietarie. Con \textbf{data confidentiality} intendiamo che informazioni confidenziali non sono rese visibili ad individui non autorizzati. Con \textbf{privacy} intendiamo che ogni individuo decide quali informazioni che lo riguardano rendere disponibili, e a chi. 
+\subsubsection{Integrity}
+L'integrity protegge dalla modifica o distruzione di informazioni, includendo non-repudiation e authenticity. Una perdita di integrity è la modifica non autorizzata di informazioni. Con \textbf{data integrity} intendiamo l'assicurarsi che informazioni e programmi vengano cambiati in maniera definita. Con \textbf{system integrity} intendiamo l'assicurarsi che un sistema svolga le sue funzioni in maniera corretta, libero da manipolazioni. 
+\subsubsection{Availability}
+Con availability intendiamo l'accesso affidabile alle informazioni. Una perdita di availability è l'interruzione dell'accesso ad alcune risorse.
+\subsubsection{Authenticity}
+Con authenticity intendiamo la proprietà, delle informazioni, di essere genuine e verificabili. In pratica, la verifica che gli utenti siano chi dicono di essere.
+
+\subsubsection{Accountability}
+Il goal dell'accountability è quello di poter tracciare tutte le azioni di un'entità sul sistema, in modo da riconoscere i colpevoli di un eventuale security breach. 
+
+\subsection{Sfide della computer security}
+Elenchiamo ora alcune sfide a cui la computer security deve sopperire:
+\begin{enumerate}
+    \item I requirements di sicurezza sembrano semplici, ma i meccanismi per risolverli sono complessi
+    \item Nello sviluppo di un meccanismo/algoritmo di sicurezza, bisogna sempre considerare i potenziali attacchi
+    \item Per il punto precedente, spesso le procedure necessarie sono controintuitive
+    \item Dopo aver progettato i sistemi di sicurezza, bisogna decidere dove utilizzarli
+    \item I meccanismi di sicurezza coinvolgono spesso più di un algoritmo/protocollo
+    \item Il vantaggio per un malintenzionato è chiaro: a lui basta trovare una sola falla, mentre il progettista deve coprirle tutte
+    \item C'è una naturale tendenza da parte di utenti/manager a non notare i benefici della sicurezza finché è troppo tardi 
+    \item La sicurezza richiede monitoring costante e regolare
+    \item La sicurezza è spesso un aggiunta successiva alla progettazione, piuttosto che parte integrante
+    \item Molti utenti/amministratori vedono la sicurezza come un impedimento alle operazioni
+\end{enumerate}
+\subsection{OSI security architecture}
+Definiamo alcuni termini:
+\paragraph{Security attack} Ogni azione che compromette la sicurezza delle informazioni possedute da un'organizzazione
+\paragraph{Security mechanism} Un processo progettato per rilevare, prevenire e recuperare attacchi di sicurezza
+\paragraph{Security service} Un servizio che migliora la sicurezza del data processing/transfer di un'organizzazione. Sono progettati come antagonisti degli attacchi di sicurezza, e fanno utilizzo di meccanismi di sicurezza
+\paragraph{Threat} Il potenziale per una violazione di sicurezza, che esiste quando c'è una circostanza, possibilità, azione o evento che potrebbe mettere a rischio la sicurezza.
+\paragraph{Attack} Un assalto alla sicurezza di sistema che deriva da un intelligent threat, ossia un tentativo deliberato di evadere i sistemi di sicurezza.
+\subsection{Security attacks}
+Gli \textbf{attacchi attivi} coinvolgono qualche modifica del data stream, mentre quelli passivi sono di 4 tipi:
+\begin{itemize}
+    \item \textbf{spoofing}: attacca l'authenticity
+    \item \textbf{tampering}: attacca l'integrity 
+    \item \textbf{replay/reflection}: attacca l'authenticity
+    \item \textbf{Denial Of Service}: attacca l'availability
+\end{itemize}
+È difficile prevenire gli attacchi attivi perché il numero di vulnerabilità è troppo alto: il goal è minimizzarne i danni. 
+\subsection{Security service}
+Un \textbf{security service} è un servizio di comunicazione/processing fornito da un sistema per dare specifici tipi di protezione a risorse; implementa security policies ed è implementato da security mechanisms. Fornisce diverse tipologie di sicurezza.
+\subsubsection{Confidentiality}
+Protezione verso accesso ai dati non autorizzato. È collegato a dati ed anonimità.
+\subsubsection{Data integrity e message authentication}
+La data integrity è la proprietà che i dati non siano stati cambiati, distrutti o persi. Protegge contro modifiche non autorizzate, rilevando cambiamenti. La data origin authentication certifica la fonte di un dato, verificandone l'identità. La message authentication è l'insieme delle due cose.
+\subsubsection{Peer entity authentication}
+Fornisce la conferma dell'identità di un peer in un'associazione. Due entità sono considerate peers se implementano lo stesso protocollo in sistemi diversi. L'authentication è utilizzata nello stabilimento della connessione o durante il trasferimento. Prova a fornire anche l'assicurazione che un'entità non sia mascherata o stia replicando una connessione passata.
+
+\subsubsection{Authorization e access control}
+L'authorization è la verifica dei permessi su una risorsa/sistema. L'access control è l'abilità di limitare e controllare l'accesso ad un sistema. 
+\subsubsection{System integrity and availability}
+La system integrity è la qualità che un sistema ha quando può eseguire la sua funzione. Si ottiene proteggendo il sistema da modifiche, perdite, distruzione. L'availability è la proprietà di un sistema di essere accessibile ed utilizzabile quando necessario, concordando con le specifiche della performance del sistema. 
+\subsubsection{Accountability e non-repudiation}
+L'accountability è la proprietà di un sistema/risorsa che assicura che le azioni di un'entità siano tracciabili a quell'entità. L'\textbf{audit} è un sistema che salva informazioni necessarie all'accountability.
+La non-repudiation fornisce protezione verso il falso rinnego di azioni. 
+\subsection{Meccanismi di sicurezza}
+I meccanismi di sicurezza hanno relazioni coi servizi; citiamo:
+\begin{itemize}
+    \item Cifratura
+    \item Firma digitale
+    \item Access control
+    \item Verifica dell'integrità dei dati
+    \item Scambio di autenticazione
+    \item Traffic padding
+    \item Routing control
+    \item Notarization
+\end{itemize}
+\subsection{Principi di security design}
+Elenchiamo alcuni principi di security design:
+\paragraph{Economy of mechanism} Significa che il design di misure di sicurezza dovrebbe essere il più semplice possibile.
+\paragraph{Fail-safe defaults} Il concetto è basarsi sui permessi, piuttosto che l'esclusione. La situazione di default è mancanza di accesso.
+\paragraph{Complete mediation} Significa che ogni accesso deve essere verificato tramite il meccanismo di access control.
+\paragraph{Open design} Mentre le encryption keys devono essere segrete, gli algoritmi devono essere pubblici.
+\paragraph{Separazione di privilegi} Attributi di privilegio multipli sono necessari per l'accesso ad una risorsa restricted.
+\paragraph{Least privilege} Ogni processo deve operare con il numero più basso di permessi possibile.
+\paragraph{Least common mechanism} Il design deve minimizzare le funzioni utilizzate da più utenti, fornendo sicurezza mutual.
+\paragraph{Psychological acceptability} I meccanismi di sicurezza non devono interferire con il lavoro degli utenti. (least astonishment)
+\paragraph{Isolation} È un principio che si applica a tre contesti: 
+\begin{enumerate}
+    \item Sistemi di accesso pubblici, che devono essere isolati da risorse critiche
+    \item Processi e file di utenti individuali devono essere isolati gli uni gli altri 
+    \item I meccanismi di security devono essere isolati: non dev'essere possibile accedervi
+\end{enumerate} 
+\paragraph{Modularity} Si riferisce al separamento delle funzioni di sicurezza in moduli, ed all'architettura modulare per il design.
+\paragraph{Layering} Si riferisce all'utilizzo di approcci multipli di protezione indirizzati a persone, tecnologia, operazioni.
+\subsection{Attack surface e trees}
+Un'\textbf{attack surface} consiste nelle vulnerabilità raggiungibili di un sistema. Un \textbf{attack tree} è una struttura gerarchica ad albero che rappresenta le tecniche di exploit delle vulnerabilità. 
+\subsection{Modello per la network security}
+Tutte le tecniche di sicurezza hanno due componenti: una trasformazione sulle informazioni, e un segreto condiviso. Consideriamo 4 tasks semplici per il design di un servizio:
+\begin{enumerate}
+    \item Progettare un algoritmo per la trasformazione 
+    \item Generare l'informazione segreta
+    \item Sviluppare metodi per la distribuzione e condivisione del segreto
+    \item Specificare un protocollo utilizzabile dalle entità che partecipano all'algoritmo
+\end{enumerate}
+
+
+
+
+
+\end{document}
