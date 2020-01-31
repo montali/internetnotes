@@ -8,6 +8,8 @@
 \usepackage{hyperref}
 \usepackage{glossaries}
 \usepackage{dirtytalk}
+\usepackage{wrapfig}
+
 
 \usepackage[normalem]{ulem}
 \newcommand{\code}[1]{\texttt{#1}}
@@ -127,9 +129,190 @@ Tutte le tecniche di sicurezza hanno due componenti: una trasformazione sulle in
     \item Sviluppare metodi per la distribuzione e condivisione del segreto
     \item Specificare un protocollo utilizzabile dalle entità che partecipano all'algoritmo
 \end{enumerate}
+\section{Secret Key Cryptography}
+Introduciamo anzitutto il concetto di \textbf{crittografia}: studio ti tecniche matematiche relative alla sicurezza informatica, in presenza di avversari. Il messaggio originale è detto \textbf{plaintext}, quello codificato \textbf{ciphertext}. Il processo di conversione da plaintext a ciphertext è detto deciphering o decryption. Uno schema utilizzato per l'encryption è detto cryptographic system o cipher.
+Nella \textbf{secret key cryptography} abbiamo una secret key, valore indipendente dal plaintext e dall'algoritmo, che produce un output differente in base alla chiave.
+I sistemi crittografici sono caratterizzati da 3 dimensioni: la tipologia di operazioni, il numero di chiavi, il modo di processamento del plaintext.
+Le tecniche utilizzate per decifrare un messaggio senza conoscenza dei dettagli di cifratura cadono nell'area della \textbf{cryptanalysis}. Questo tipo di attacco esploita le caratteristiche dell'algoritmo per tentare di dedurre un plaintext. In un \textbf{attacco brute force} l'attaccante prova ogni chiave possibile finché non ottiene il plaintext. Un \textbf{side channel attack} è un attacco basato su informazioni ottenute dall'implementazione fisica del sistema, piuttosto che da debolezze dell'algoritmo. 
+\subsection{Tipi di attacco}
+\subsubsection{Ciphertext only}
+Il malintenzionato ha visto e salvato del ciphertext analizzabile, e può riconoscere quando ha ottenuto il plaintext. È l'attacco più difficile, è necessario abbastanza ciphertext e si hanno poche informazioni.
+\subsubsection{Known plaintext attack}
+L'opponent conosce una coppia (plaintext, ciphertext), dalla quale prova ad ottenere le corrispondenze. Il plaintext viene ottenuto anche tramite certe keywords, pattern, probable-words. 
+\subsubsection{Chosen plaintext/ciphertext attack}
+L'opponent può scegliere ogni plaintext e criptarlo tramite il sistema.
 
+\subsection{Computational e unconditional security}
+Uno schema di encryption è detto \textbf{computationally secure} se: il costo per rompere il cipher è più alto del valore dell'informazione, e il tempo necessario è più lungo del lifetime dell'informazione. 
+Uno schema è detto \textbf{unconditionally secure} se il ciphertext generato dallo schema non contiene abbastanza informazioni per determinare il plaintext corrispondente, non importa quanto ciphertext sia disponibile. 
+\subsection{Tecniche di encryption classiche}
+Distinguiamo tra tecniche di substitution e transposition. 
+\subsubsection{Cifrario di Cesare}
+Il primo utilizzo di cifrario. Si shiftano le lettere di un indice k.
+\begin{displaymath}
+    C = E(k,p) = (p+k) \textrm{mod}26
+\end{displaymath}
+\subsubsection{Monoalphabetic ciphers}
+Basati su permutazioni dei caratteri alfabetici. Ci sono $26!$ possibili chiavi. Però, l'opponent ha un'altra linea di attacco: exploitare le regolarità del linguaggio, come la frequenza delle lettere o i digrams.
+\subsubsection{Multiletter ciphers}
+Il multiletter cipher più conosciuto è il \textbf{Playfair}, che tratta i digrams come singole unità e le traduce in digrams del ciphertext. Il Playfair è basato sull'uso di una matrice 5x5 di lettere, costruita con una keyword. 
+\subsubsection{Polyalphabetic ciphers}
+Un altro modo di migliorare i cifrari monoalfabetici è utilizzare differenti sostituzioni monoalfabetiche in ordine. Un esempio è il \textit{Vigenère cipher}, nel quale abbiamo un vettore di chiavi da sommare ai caratteri (come in Cesare). La lunghezza della chiave può però essere ricavata dalle ripetizioni: se due sequenze identiche di lettere di plaintext si ripetono a una distanza multipla della chiave, genereranno ciphertext identici. 
+\subsubsection{One-time pad}
+Citiamo il \textit{Vernam cipher}, in cui abbiamo un vettore di chiavi lungo quanto il plaintext. Se il vettore è veramente random, otteniamo il cosiddetto \textbf{one-time pad}: non c'è relazione statistica tra ciphertext distinti, e sarà quindi unconditionally secure.
+\subsubsection{Row transposition ciphers}
+In questi cifrari, scriviamo il messaggio in un rettangolo, riga per riga, e leggiamo ogni colonna, con ordine definito dalla chiave. Possiamo anche effettuare più stadi di trasposizione. 
+\subsubsection{Product ciphers}
+I cipher che utilizzano sostituzioni o trasposizioni potrebbero non essere abbastanza sicuri. Consideriamo quindi di utilizzare più ciphers in successione, ad esempio una sostituzione seguita da trasposizione. 
+\subsubsection{Block e stream cipher}
+Uno \textbf{stream cipher} encrypta uno stream un bit/byte alla volta. Un \textbf{block cipher} cripta invece un blocco di plaintext alla volta, ottenendo un blocco di ciphertext, solitamente di lunghezza 64/128 bit. Un \textbf{ideal block cipher} è un cifrario arbitrario di sostituzioni reversibili. Non è pratico dal punto di vista implementativo/delle performance. Il mapping stesso costituisce la chiave, che ha quindi lunghezza $n2^n$ bits. 
+\subsubsection{Feistel cipher}
+\begin{wrapfigure}{r}{0.25\textwidth}
+    \begin{center}
+      \includegraphics[width=0.24\textwidth]{res/crypto/Feistel.png}
+    \end{center}
+    \caption{Feistel encryption}
+  \end{wrapfigure}
+Feistel propose di approssimare l'ideal block cipher utilizzando il concetto di product cipher, ossia l'esecuzione di più cifrari in sequenza: sviluppiamo un block cipher con key length di $k$ bits, e block length di $n$ bits, rendendo possibili $2^k$ trasformazioni, piuttosto che $2^n!$. In particolare, Feistel propose l'uso di un cifrario che alternasse sostituzioni (ogni elemento del plaintext è sostituito da un elemento corrispondente del ciphertext) e permutazioni (una sequenza di elementi del plaintext è sostituito dalla sua permutazione). Questo cifrario è l'applicazione pratica di una proposta di Claude Shannon, che consisteva nell'alternare confusione e diffusione:
+\begin{itemize}
+    \item Nella \textbf{diffusione}, la struttura statistica del plaintext è dissipata in statistiche long-range del ciphertext. Questo è ottenuto facendo in modo che ogni cifra del plaintext influenzi più cifre del ciphertext.
+    \item La \textbf{confusion} cerca di rendere complessa la relazione tra le statistiche del ciphertext e il valore dell'encryption key, tramite un complesso meccanismo di sostituzione 
+\end{itemize}
+Gli input all'algoritmo così generato sono un plaintext block di lunghezza $n=2w$ bits ed una chiave $K$. Il plaintext block è diviso in due metà: $LE_0$ e $RE_0$, che passano più stadi di processamento e vengono poi combinati. 
+Il processo di decryption è essenzialmente lo stesso: basta invertire l'ordine delle chiavi.
+Possiamo variare alcuni parametri per modificare le caratteristiche del cifrario:
+\begin{itemize}
+    \item Un \textbf{block size} maggiore aumenta la sicurezza. Valori tipici sono 64/128 bits.
+    \item Una \textbf{key size} maggiore incrementa la security. 128 bits è la dimensione classica.
+    \item Aumentare il \textbf{numero di rounds} rende più difficile la cryptanalysis.
+    \item Un \textbf{algoritmo di generazione di subkeys} più complesso aumenta la difficoltà della cryptanalysis
+    \item Aumentare la complessità della funzione di arrotondamento $F$ aumenta la resistenza alla cryptanalysis
+\end{itemize}
+\subsection{DES}
+DES, \textit{Data Encryption Standard} fu creato nel 1977 dal NIST. L'algoritmo è detto \textbf{DEA} (\textit{Data Encryption Algorithm}), che è un cifrario Feistel con blocchi da 64 bit e chiavi da 56 bit. Nel 1999 il NIST lancia TDEA, detto anche 3DES (\href{https://www.facebook.com/IPIUBELLELLIDIPARMA/videos/vl.2430501220562185/1326509910720610/?type=1}{\textit{In do ela al 3DES?}}). 
+\subsubsection{Funzionamento}
+L'encryption è composta di 4 fasi principali:
+\begin{itemize}
+    \item Prima di tutto, \textbf{key transformation} per ottenere 16 chiavi 48-bit da quella principale a 56-bit
+    \item Initial Permutation ($IP$)
+    \item 16 round identici di confusione-diffusione con la chiave 
+    \item Permutazione finale ($IP^{-1}$)
+\end{itemize}
+Otteniamo così l'effetto valanga: una piccola modifica nel plaintext o la chiave produce una modifica significativa nel ciphertext. La decryption usa lo stesso algoritmo con le subkeys al contrario.
+\subsubsection{Vantaggi di DES}
+DES ha 3 vantaggi principali: le chiavi a 56-bit rendono il bruteforce poco pratico, nessuno ha ancora trovato debolezze nell'algoritmo, resiste ai timing attacks. 
+\subsubsection{Double DES}
+Con double DES, dato un plaintext P e due chiavi $K_1$ e $K_2$, il ciphertext è generato come
+\begin{displaymath}
+    C=E(K_2, E(K_1,P))
+\end{displaymath}
+Questo algoritmo è però suscettibile ad attacchi \textbf{meet-in-the-middle}, basato sull'osservazione che
+\begin{displaymath}
+    X=E(K_1, P) = D(K_2, C)
+\end{displaymath}
+Data una coppia $(P,C)$, criptiamo P per tutti i possibili valori di $K_1$, salviamo i risultati in una tabella e li ordiniamo per X. Poi, decriptiamo C usando tutti i possibili valori di $K_2$, controllando la tabella. In caso di match, testiamo le due chiavi contro un'altra coppia $(P,C)$ conosciuta. 
+\subsubsection{3DES}
+Distinguiamo tra 3DES a 2 chiavi e a 3 chiavi. Nel primo,
+\begin{displaymath}
+    C=E(K_1,D(K_2, E(K_1,P)))\hspace{10px}P=D(K_1, E(K_2, D(K_1,C)))
+\end{displaymath}
+A 3 chiavi, invece:
+\begin{displaymath}
+    C=E(K_3,D(K_2, E(K_1,P)))\hspace{10px}P=D(K_1, E(K_2, D(K_3,C)))
+\end{displaymath}
+\subsection{AES}
+AES, \textit{Advance Encryption Standard} fu pubblicato da NIST nel 2001. È conosciuto anche come Rijndael block cipher, ed è adottato dal governo americano.
+La struttura generale vede block size di 128 bits, dipinti in una matrice 4x4 di bytes. Il blocco è copiato ad un array \textbf{State}, modificato ad ogni stadio dell'encryption. La chiave è espansa in un array di parole da 4 bytes. Il cifrario consiste di $N$ round, dipendente dalla key length. I primi $N-!$ rounds consistono di 4 trasformazioni: SubBytes (usa un S-box per eseguire sostituzioni byte-a-byte), ShiftRows (permutazione semplice), MixColumns(sostituzione che usa l'arithmetic over $GF(2^8)$), AddRoundKey(XOR bitwise del blocco con una porzione della chiave espansa). La trasformazione iniziale è una AddRoundKey, l'n-simo round contiene 3 trasformazioni. Encryption e decryption hanno struttura semplice ma leggermente diversa. AddRoundKey è l'unico stadio che coinvolge anche la chiave (cifrario Vernam). 
+\subsubsection{Aritmetica dei finite fields}
+Un finite field è un field con numero finito di elementi (ordine del field). Un finite field di ordine m esiste solo se $m=p^n$ per qualche intero positivo $n$ e intero primo $p$.
+Il finit field fi ordine $p^n$ è denotato $GF(p^n$) (Galois Field). Gli elementi sono rappresentati come polinomiali con coefficienti binari. L'addizione è svolta tramite il bitwise XOR delle due stringe di coefficienti a n-bit. La moltiplicazione con il modulo. L'inverso è definito come $1 mod P(x)$. AES opera su byte a 8 bit. Tutte le operazioni sono svolte sul field finito $GF(2^8)$ con il polinomiale irriducibile $m(x) = x^8 + x^4 + x^3 + x + 1$. Ci sono 30 possibili polinomi irriducibili. 
+\subsubsection{Operazioni}
+\paragraph{SubBytes} Il SubBytes è l'operazione di sostituzione in avanti dei byte: una semplice lettura da tabella. Ogni byte dello State è mappato in un altro. L'InvSubBytes è lo stesso processo con un inverse S-box.
+\paragraph{ShiftRows} La trasformazione in avanti di shifting delle row esegue degli shift circolari sulla seconda, terza e quarta riga dello State. L'InvShiftRows fa la stessa cosa nella direzione inversa.
+\paragraph{MixColumns} La trasformazione di mix delle colonne in avanti opera su ogni colonna individualmente. Ogni byte di una colonna è mappata in un nuovo valore, che è funzione di tutti i 4 bytes della colonna. È, insomma, una moltiplicazione tra matrici.
+InvMixColumns è definita da una diversa moltiplicazione tra matrici.
+\paragraph{AddRoundKeys} Nella trasformazione add round key in avanti, i 128 bit dello State vengono XORrati (bitwise) con i 128 bit della round key. L'inversa è uguale identica: lo XOR è inverso.
+\paragraph{Key expansion} La key expansion prende in input una chiave a 16 byte (4 parole) e produce un array lineare di parole. In AES128 l'array ha 44 elementi. 
 
+\subsubsection{Sicurezza di AES}
+Il brute force è improbabile: già solo con chiavi a 128 bit, abbiamo $3.4 x 10^38$ chiavi possibili. 
+\subsection{Metodi di encrypting di grandi messaggi}
+Solitamente, abbiamo una quantità di dati arbitraria. NIST ha pubblicato 5 modalità: ECB, CBC, OFB, CFB, CM. A volte è necessario del padding per raggiungere una lunghezza specifica: bit padding (1 poi 0 necessari), ANSI X.923 (ultimo byte che definisce lunghezza del padding, gli altri 0), RFC 5652 (ogni byte contiene la lunghezza del padding). 
+\subsubsection{Electronic Code Book}
+ECB rompe il messagio in $n$ blocchi di dimensione $b$ con padding per l'ultimo. Ogni blocco è criptato indipendentemente con chiave $K$. ECB è molto semplice e non introduce operazioni extra, ma potrebbero apparire ripetizioni, è vulnerabile alle similarities tra ct e agli attacchi con conoscenza parziale del plaintext.
+\subsubsection{Cipher Block Chaining}
+CBC utilizza un Initialization Vector per fare in modo che due blocchi uguali diano ct diversi. Ha decryption semplice, ct dipendente da tutti i messaggi precedenti, ottime performance. Però, un valore IV costante potrebbe portare a problemi.
+\subsubsection{Output FeedBack}
+Anche in OFB, il ct è funzione del precedente plaintext, con una nonce. I vantaggi sono due: la sequenza pseudorandom può essere generata in anticipo, e c'è possibilità di criptare messaggi di lunghezza variabile. Però, dobbiamo usare sempre la stessa sequenza pseudorandom (come un OTP), e sender/receiver devono essere sincronizzati. 
+\subsubsection{Cipher FeedBack}
+In CFB il plaintext è diviso in segmenti di s bits, piuttosto che in blocchi. Come OFB, la sequenza può essere generata in anticipo, ma ha gli stessi problemi. 
+\subsubsection{Counter Mode}
+CM è simile a OFB, la sequenza di counter deve avere la proprietà di blocchi diversi tra loro. Ha vari vantaggi: le funzioni forward cipher possono essere applicate ai counter prima della disponibilità del plaintext, le funzioni di cipher possono essere eseguite in parallelo, il plaintext block che corrisponde a un ct può essere recuperato indipendentemente dagli altri. Ha, però, limitazioni: non dobbiamo usare mai la stessa counter sequence, e sender/receiver devono essere sincronizzati.
+\subsection{Utilizzi principali della secret key cryptography}
+La secret key cryptography ricopre soprattutto confidentiality e authentication: nella prima, possiamo trasmettere su un canale poco sicuro e salvare dati su storage poco sicuro. Per la seconda, possiamo autenticare utenti tramite un meccanismo challenge-response.
+Abbiamo alcuni svantaggi: richiede sempre un metodo sicuro per lo scambio di chiavi, ed in caso di chiavi permanenti pre-shared il numero totale di chiavi per N users è $N(N-1)/2$, che è troppo.
 
-
-
+\section{Funzioni di hash e autenticazione}
+\subsection{Hash function}
+Una funzione hash $H$ accetta un blocco di dati $M$, di lunghezza variabile, e produce un hash di lunghezza fissata di lavore $h=H(M)$. Una \textbf{cryptographic hash function} è un algoritmo per il quale è computazionalmente infattibile trovare: un oggetto che restituisca un hash arbitraria, due oggetti con lo stesso hash. Per queste proprietà, le hash sono utilizzate spesso per determinare se i dati sono cambiati. 
+\subsubsection{Message authentication}
+La message authentication assicura che i dati ricevuti siano esattamente come inviati. Quando una hash function viene utilizzata per fornire message authentication, il valore dell'hash è detto \textbf{message digest}. Se c'è un mismatch, il ricevitore sa che il messaggio è stato alterato. 
+Scongiuriamo un attacco man in the middle proteggendo il valore hash del messaggio.
+\subsection{Requisiti di sicurezza}
+Definiamo la \textbf{preimage} di $h$ come $h=H(x)$. Una collisione accade quando abbiamo $x \neq y$ e $H(x)=H(y)$. Se permettiamo input di lunghezza arbitraria, il numero di preimage per hash è arbitrariamente grande.
+Elenchiamo 7 requisiti:
+\begin{itemize}
+    \item \textbf{Variable input size}
+    \item \textbf{Fixed output size}
+    \item \textbf{Efficiency}: $H(x)$ è relativamente semplice da calcolare dato $x$
+    \item \textbf{Preimage resistant}: dato un valore hash $h$, è infattibile trovare una $y$ tale che $H(y)=h$.
+    \item \textbf{Second preimage resistant}: dato un blocco $x$, è computazionalmente infattibile trovare una $y \neq x$ con $H(y)=H(x)$.
+    \item \textbf{Collision resistant}: è computazionalmente infattibile trovare $x \neq y$ con $H(x) = H(y)$
+    \item \textbf{Pseudorandomness}: l'output di H è compatibile con i test standard per la pseudorandomness
+\end{itemize}
+Se le proprietà da 1 a 5 sono soddisfatte, si dice \textbf{weak hash function}, se anche la 6 la è abbiamo una \textbf{strong hash function}.
+\subsection{Struttura generale di una secure hash function}
+La struttura, proposta inizialmente da Merkle, è riferita ad un'iterated hash function. L'algoritmo di hash richiede l'uso ripetuto di una funzione di compressione $f$, che prende due input (un input a n-bit dallo step precedente e blocco a b-bit). Spesso, $b>n$. Il problema di progettare una secure hash function è principalmente quello di progettare una funzione di compressione collision-resistant.
+\subsection{Secure Hash Algorithm}
+SHA, pubblicato dal NIST, è la funzione di hash più utilizzata. Abbiamo diverse versioni, l'ultima uscita nel 2015 (SHA-3).
+\subsubsection{SHA-1}
+Qui, l'input message (padded) è frammentato in blocchi da 512 bit, composti da 16 parole $X_0,X_1...X_{15}$. L'algoritmo utilizza un internal state a 160 bit. Il suo valore per processare il primo blocco è sempre lo stesso. Dopo 80 round, l'internal state è utilizzato per processare il prossimo blocco. Quando i blocchi sono finiti, l'internal state è l'hash. Per ogni t-esimo round, deriviamo $W_t$ da $X_i$, utilizziamo una parola costante diversa $K_t$ tra 4 parole, utilizziamo una diversa funzione $F_t$ tra 4 (Ch, Parity, Maj, Parity). 
+\subsubsection{SHA-2}
+SHA-256 e SHA-512 sono calcolati con parole a 32 e 64 bit, rispettivamente, e hanno 64 e 80 round. SHA-224 e SHA-384 sono versioni troncate con valori iniziali diversi.
+\subsubsection{SHA-3}
+SHA-3 è comunemente chiamata Keccak. Supporta le stesse hash lengths di SHA-2. La sua struttura interna differisce significativamente dal resto della famiglia SHA, è una \textit{cryptographic sponge function}, ossia una funzione con input e output di lunghezza variabile, basata su una trasformazione a lunghezza fissa o permutazione che lavora su un numero fisso $b$ di bit (la larghezza). $f$ opera su uno state di $b=r+c$ bits, con $r$ detto bitrate e $c$ capacity. Di default in Keccak abbiamo $r=576$ bits e $c=1024$ bits. 
+\subsection{Message Authentication Code (MAC)}
+Un MAC è un checksum crittografico, generato da un algoritmo che crea un piccolo blocco di dimensione fissa, dipendente dal messaggio e da una chiave segreta K: $MAC=C_K(M)=C(K,M)$
+Un MAC condensa un messaggio $M$ di lunghezza variabile ad un authenticator di lunghezza fissa, che è appeso a M come sua \textbf{signature}. Ha bisogno di non essere reversibile, ed è una funzione one-to-many: potenzialmente molti messaggi hanno lo stesso MAC, ma trovarli dev'essere difficile. 
+\subsubsection{Data Authentication Algorithm}
+DAA è un MAC basato su DES-CBC: utilizza $IV=0$ e zero-pad del blocco finale. Encrypta il messaggio utilizzando DES in modalità CBC, ed invia il blocco finale come MAC. 
+\section{Public Key Cryptography}
+La public key cryptography è probabilmente la rivoluzione più grande nella storia della crittografia. Gli algoritmi sono basati su funzioni matematiche, piuttosto che su sostituzione e permutazione. La caratteristica più importante è il suo essere \textbf{asimmetrica}, richiedendo l'uso di due chiavi (una pubblica, una privata). Siccome le implementazioni pratiche sono computazionalmente costose, la crittografia public-key è ristretta a due problemi principali: distribuzione delle chiavi e firma digitale. Le caratteristiche principali sono che: è computazionalmente infattibile determinare la chiave di decryption dato l'algoritmo e la chiave di encryption; una delle due chiavi può essere usata per l'encryption, l'altra per la decryption. 
+\subsection{Public key cryptography per la confidentiality}
+4 passi fondamentali:
+\begin{enumerate}
+    \item Ogni user genera un paio di chiavi utilizzate per l'encryption e la decryption.
+    \item Ogni user rende disponibile la sua public key.
+    \item Se Bob vuole inviare un messaggio confidential ad Alice, lo cripta con la chiave pubblica di Alice
+    \item Quando Alice riceve il messaggio, lo decripta usando la sua chiave privata.
+\end{enumerate}
+\subsection{Public key cryptography per l'authentication}
+In questo caso, Bob prepara un messaggio per Alice e lo cripta utilizzando la sua chiave privata. Alice può decriptarlo con la chiave pubblica di Bob, assicurandosi che l'abbia generato lui. In più, è impossibile modificare il messaggio senza accesso alla chiave privata. Per più efficienza, criptiamo un piccolo blocco di bit che sia funzione del documento.
+\subsection{Requirements per la public key cryptography}
+Un problema semplice è un problema risolvibile in tempo polinomiale come funzione della lunghezza dell'input. Un problema infeasible è un problema il cui costo di risoluzione cresce più velocemente di una funzione polinomiale, data la lunghezza dell'input. Solo pochi algoritmi sono stati accettati negli anni; tutti questi sono basati su una \textbf{trapdoor one-way function}, una famiglia di funzioni invertibili $f_k$ tali che $f_k(X)$ sia semplice, $X=f_k^{-1}(Y)$ sia semplice se conosciamo $k$ e $Y$, $X=f_k^{-1}(Y)$ sia infattibile se conosciamo solo Y.
+\subsection{Cryptanalysis}
+Distinguiamo 3 attacchi:
+\begin{itemize}
+    \item \textbf{Bruteforce}: la contromisura rispetto ai bruteforce è utilizzare chiavi di grandi dimensioni. 
+    \item \textbf{Trovare la private data la public}: non è ancora stata provata l'impossibilità di questo attacco. 
+    \item \textbf{Probable message attack}: sappiamo il messaggio probabile e la chiave, proviamo tutte le private.
+\end{itemize}
+\subsection{RSA}
+In RSA il plaintext è criptato a blocchi aventi valore binario minore di $n$. Definiamo il blocco plaintext $M$ e il ct corrispondente $C$. Abbiamo:
+\begin{displaymath}
+    C=M^e mod n \hspace{10px}M=C^d mod n = (M^e)^d mod n = M^{ed}mod n
+\end{displaymath}
+Sia il sender che il receiver devono conoscere il valore di $n$. Il sender conosce il valore di $e$, e il receiver quello di $d$. Quindi, il receiver avrà public key $PU=\{e,n\}$ e private key $PR=\{d,n\}$. Il problema ora è: come ottenere $e,d,n$ tali che $M^{ed} mod n = M$ per tutti gli $M<n$? Prendiamo $p,q$ primi, e li teniamo segreti. Calcoliamo $n=pq$. Calcoliamo $\phi(n) = (p-1)(q-1)$ e lo teniamo segreto.
+Poi scegliamo $e$, con $GCD(\phi(n),e) = 1$ e $1<e<\phi(n)$. Calcoliamo $d \equiv e^{-1} mod \phi(n)$ e lo teniamo segreto. 
+Ora, sapendo $e$ ed $n$ ma non la trapdoor key $\phi(n)$, dovrebbe essere infattibile trovare $d$.
 \end{document}
