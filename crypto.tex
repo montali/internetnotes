@@ -315,4 +315,24 @@ In RSA il plaintext è criptato a blocchi aventi valore binario minore di $n$. D
 Sia il sender che il receiver devono conoscere il valore di $n$. Il sender conosce il valore di $e$, e il receiver quello di $d$. Quindi, il receiver avrà public key $PU=\{e,n\}$ e private key $PR=\{d,n\}$. Il problema ora è: come ottenere $e,d,n$ tali che $M^{ed} mod n = M$ per tutti gli $M<n$? Prendiamo $p,q$ primi, e li teniamo segreti. Calcoliamo $n=pq$. Calcoliamo $\phi(n) = (p-1)(q-1)$ e lo teniamo segreto.
 Poi scegliamo $e$, con $GCD(\phi(n),e) = 1$ e $1<e<\phi(n)$. Calcoliamo $d \equiv e^{-1} mod \phi(n)$ e lo teniamo segreto. 
 Ora, sapendo $e$ ed $n$ ma non la trapdoor key $\phi(n)$, dovrebbe essere infattibile trovare $d$.
+\subsubsection{Aspetti computazionali}
+Sia l'encryption che la decryption di RSA necessitano l'elevamento di un intero a una potenza intera, mod n. Se l'elevamento fosse fatto sugli interi e poi modulato, i valori intermedi sarebbero enormi. Fortunatamente, possiamo sfruttare una proprietà dell'aritmetica modulare.
+Per velocizzare RSA, si sceglie $e$ specificatamente, spesso 65537 ($2^{16}+1)$, 3 e 17. Non possiamo fare lo stesso con $d$: un valore $d$ piccolo è vulnerabile ai bruteforce e alla cryptanalysis.
+Per prevenire la scoperta di $p$ e $q$ dobbiamo sceglierli da un insieme grande: serve un metodo per trovare numeri primi grandi, ed il più comodo è estrarre numeri casuali dispari e testarli. 
+Avendo determinato $p$ e $q$, dobbiamo determinare $e$ e $d$: generiamo una serie di numeri random e li testiamo contro $\phi(n)$ finché un numero relativamente primo a $\phi(n)$ viene trovato, ossia $e$. Poi, $d$ viene calcolato tramite l'extended Euclid's algorithm.
+\subsubsection{Possibili attacchi ad RSA}
+Distinguiamo 5 attacchi possibili:
+\begin{itemize}
+    \item \textbf{Brute force}
+    \item \textbf{Mathematical attacks}: fattorizzazione di n tramite GNFS (usando n>2048 bits si è al sicuro fino al 2030), o l'algoritmo di Shor's per quantum computers. Per evitare questi atttacchi, p e q devono differire poco in lunghezza, $(p-1)$ e $(q-1)$ devono contenere un fattore primo grande, $GCD(p-1,q-1)$ deve essere piccolo
+    \item \textbf{Timing attacks}: controllando il tempo di decifratura si può ottenere la private key. Per mettersi al sicuro, constant exponentiation time, random delay, bilding (moltiplicazione ct per valore random)
+    \item \textbf{Hardware Fault Based attacks}: grazie all'accesso fisico alla macchina, togliamo potenza al processore per produrre firme invalide da analizzare
+    \item \textbf{Chosen Ciphertext Attack}: exploit di RSA in cui, scegliendo un blocco adatto, possiamo ottenere informazioni per la cryptanalysis. Per risolvere, modifichiamo il pt con optimal asymmetric encryption padding.
+\end{itemize}
+
+\subsection{Diffie-Hellman key exchange}
+Vari prodotti commerciali utilizzano questa tecnica di scambio chiavi, proposta da Diffie ed Hellman nel 1976. Lo scopo è permettere a due utenti di scambiare chiavi per un utilizzo con secret key encryption. È meno generico di RSA: non fa encryption né firme. L'effettività è data dalla difficoltà del calcolo dei logaritmi discreti.
+Una \textbf{primitive root} di un numero primo $p$ è una il cui modulo $p$ genera tutti gli interi da 1 a $p-1$.
+Se $a$ è la primitive root del numero primo $p$, allora i numeri $a mod p, a^2 mod p,...$ sono interi distinti da 1 a $p-1$ in qualche permutazione. Per ogni intero $b$ e primitive root $a$ del numero primo $p$, possiamo trovare un esponente tale che $b \equiv a^i (mod p)$. L'esponente $i$ è detto \textbf{logaritmo discreto} di $b$ in base $a, mod p$.
+Questo algoritmo è suscettibile ad attacchi man-in-the-middle.
 \end{document}
