@@ -436,4 +436,92 @@ Verifichiamo così:
     v= \left[(g^{u_1}y^{u_2} mod p)\right] mod q
 \end{displaymath}
 Se $v=r'$ la firma è valida.
+
+\section{Distribuzione delle chiavi}
+\subsection{Distribuzione simmetrica con l'utilizzo di encryption simmetrica}
+Per il funzionamento dell'encryption simmetrica, è necessario che gli utenti abbiano una chiave condivisa, protetta dall'accesso degli altri. Ci sono più metodologie per questo:
+\begin{itemize}
+    \item A può selezionare la chiave e consegnarla fisicamente
+    \item Un terzo può scegliere la chiave e consegnarla fisicamente ad entrambi 
+    \item Le nuove chiavi possono essere criptate con una chiave vecchia
+    \item Se A e B sono connessi in sicurezza a C, C può inviare la chiave ad entrambi
+\end{itemize}
+Le prime due opzioni richiedono interazione fisica, non sempre fattibile, la terza è rischiosa (basta una chiave e le altre sono insicure). La quarta viene regolarmente usata, tramite \textbf{Key Distribution Centers} (KDC) e gerarchie di chiavi (master key condivisa dal KDC, session key temporanea).
+La metodologia è la seguente:
+\begin{enumerate}
+    \item A invia una richiesta al KDC, includendo identità di A e B ed una nonce 
+    \item Il KDC risponde con un messaggio criptato con $K_a$ (la master key con A), con le session keys $K_s$ e la richiesta originale. In più, il KDC trasmette ad A $K_s$ criptata con $K_b$
+    \item A inoltra a B le informazioni ricevute per lui dal KDC, che essendo criptate con $K_b$ sono protette dall'eavesdropping
+    \item B invia una nonce ad A, criptata con $K_s$
+    \item Utilizzando $K_s$, A risponde con $f(N_2)$ con $f$ funzione di trasformazione conosciuta a B.
+\end{enumerate}
+Questi ultimi due passi sono necessari per assicurarsi che il messaggio originale non fosse un replay inviato da un malintenzionato che non conosce $K_s$.
+Utilizzare un solo KDC è a volte limitante: possiamo stabilire gerarchie di KDC, composte da \textit{local KDCs} per i domini piccoli, e \textit{global KDCs} utilizzati dai local per la generazione di session keys.
+\subsubsection{Lifetime delle chiavi}
+Diminuendo la lifetime delle chiavi, ne aumentiamo la sicurezza, a scapito di ritardi nella comunicazione. È consigliabile, per protocolli connection-oriented, utilizzare una chiave per connection. Per protocolli connection-less, ad esempio in transazioni, è meglio tenere un periodo di tempo fisso. 
+\subsubsection{Transparent Key Control}
+In un protocollo connection-oriented, introduciamo l'uso di un security service module che operi in modo trasparente rispetto all'applicazione. Può essere al livello di trasporto o rete.
+\subsubsection{Decentralized Key Control}
+Nonostante una decentralizzazione totale non sia pratica, può essere utile in contesti locali:
+\begin{enumerate}
+    \item A invia una richiesta per una session key, includendo una nonce $N$
+    \item B risponde con un messaggio criptato con la master key, includente la session key $K_s$, $f(N_1)$ e $N_2$
+    \item Utilizzando la chiave di sessione $K_s$, A restituisce $f(N_2)$ a B
+\end{enumerate}
+Oltre a separare le master keys dalle chiavi di sessione, potremmo voler definire diversi tipi di session keys, ad esempio data-encrypting, PIN-encrypting, file-encrypting.
+Nello schema control vector, ogni session key ha un control vector associato, consistente in un numero di campi che specificano usi e restrizioni per la chiave. La lunghezza del vettore può variare.
+\subsection{Distribuzione simmetrica utilizzando encryption asimmetrica}
+Vista la complessità dei meccanismi public key, vengono usati solitamente per il solo scambio di chiavi, come nel modello Diffie-Hellman. 
+\subsubsection{Distribuzione delle chiavi}
+Gli schemi studiati sono suscettibili agli attacchi man-in-the-middle. Per risolvere, introduciamo diverse tecniche:
+\paragraph{Public Announcement delle chiavi pubbliche} Qui, ogni partecipante invia la sua chiave pubblica. Ha un rischio: ognuno può creare la sua chiave pubblica, quindi un malintenzionato può fingere di essere qualcun altro.
+\paragraph{Publicly Available Directory} Aumentiamo la sicurezza introducendo una directory di chiavi pubbliche gestita da un'organizzazione affidabile che le autentichi. Opzionalmente, autentichiamo anche la directory. 
+\paragraph{Public-Key Certificates} L'authority potrebbe creare rallentamenti. Un'alternativa valida sono i certificati, composti da una public key ed un identifier, firmati da una terza parte affidabile, come una certificate authority. Ogni partecipante può leggere un certificato, determinando il nome e la public key, e verificandone l'authority all'interno della time validity.
+I certificates sono spesso usati in web transactions (HTTPS), VPN (IPSec), messaggistica\dots
+Possiamo introdurre anche una struttura gerarchica di authorities che facciano capo ad una sola root. 
+\subsubsection{X.509}
+X.509 è uno standard per la definizione di directory services, definendo un framework per i servizi della stessa. Ogni certificato contiene la chiave pubblica ed è firmato con la chiave privata dell'authority. Il formato X.509 è utilizzato in S/MIME, IPSec, SSL/TLS\dots
+La versione corrente di X.509 non specifica un algoritmo di firma, spesso si usa DSA. La notazione standard per i certificati X.509 è \code{CA $<<$A$>>$ = CA \{V, SN, AI, CA, UCA, A, UA, Ap, TA\}}. Solitamente, un nuovo certificato viene generato prima della scadenza del vecchio. È anche possibile revocare certificati in situazioni di necessità; ogni CA deve mantenere una lista dei certificati revocati, ma non di quelli scaduti. 
+\subsection{Public Key Infrastructure}
+Una PKI è un set di hw, sw, persone, policies e procedure utili alla gestione di certificati basati su crittografia asimmetrica. Il gruppo IETF PKIX lavora quotidianamente al miglioramento di un modello basato su X.509 per l'utilizzo su internet.
+
+\section{User authentication}
+\subsection{Principi della user authentication}
+Lo standard RFC 4949 definisce la user authentication come processo di verifica di identità composto in due step: identification step (presentazione di un identifier), verification step (presentazione di informazioni che bindano l'entità e l'identifier).
+\subsection{Standard NIST per l'electronic user identification}
+NIST definisce l'electronic user authentication come il processo per stabilire confidenza in identità degli user presentate elettronicamente a un sistema informativo. Il requirement iniziale è che l'utente sia registrato. Un applicant si registra ad una Registration Authority (RA) per diventare un subscriber del Credential Service Provider (CSP). L'RA è un'entità fidata che stabilisce identità per un applicant del CSP. La credenziale generata dal CSP è una struttura dati che collega un'identità e valori addizionali ad un token in possesso al subscriber, verificabile. Una volta che lo user è registrato, l'authentication process può avvenire. L'entità da autenticare è detta \textbf{claimant}, chi verifica è detto \textbf{verifier}. Quando il claimant dimostra il possesso di una credential, il verifier trasmette un'assertion riguardante l'identità del subscriber alla relying party, che si occupa dell'access control e delle decisioni di autorizzazione.
+\subsubsection{Metodi di autenticazione}
+Ci sono essenzialmente 4 metodi:
+\begin{itemize}
+    \item Qualcosa che l'individuo conosce
+    \item Qualcosa che l'individuo possiede
+    \item Qualcosa che l'individuo è
+    \item Qualcosa che l'individuo fa
+\end{itemize}
+\subsection{Lamport's OTP}
+\begin{enumerate}
+    \item A inizia con un segreto $w$ e una costante $t$ che definisce il numero di identificazioni possibili
+    \item A calcola $H(w)$ utilizzando una funzione di hash one-way 
+    \item A invia $\{ID_A, w_0 = H^t(w)\}$ a B utilizzando un canale sicuro
+    \item B inizializza il suo contatore $i_A$ per $A$ ad 1
+    \item Per $1<i<t$, A invia $\{ID_A, w_0 = H^{t-i}(w)\}$ a B attraverso un canale sicuro, che controlla che $i=i_A$ e $H(w_i)=w_{i-1}$
+\end{enumerate}
+\subsubsection{Mutual authentication}
+La mutual authentication è un campo d'applicazione molto importante, il cui problema maggiore sono i \textbf{replay attacks}. Possibili due approcci: timestamps, challenge/response.
+\subsection{User Authentication con symmetric encryption}
+Ci ricolleghiamo al concetto di distribuzione delle session keys basato su KDC, con master key. Aggiungiamo però l'encription della nonce di B con la chiave di sessione, per scongiurare i replay attacks. In più, il protocollo lascia A in possesso di un token utilizzabile per l'autenticazione di B, evitando di dover comunicare di nuovo col KDC. Possiamo altrimenti usare timestamps, con un central Authentication Server che fornisca public-key certificates. I timestamps impediscono il replay delle chiavi compromesse. Possiamo anche utilizzare delle nonces al posto dei timestamps, coinvolgendo un KDC. 
+\subsection{Federated Identity Management}
+Il federated identity management è un concetto nuovo, che sfrutta l'utilizzo di uno schema di gestione delle identità attraverso numerose applicazioni/organizzazioni. Con \textbf{identity management} intendiamo la definizione di un'identità per ogni utente, associandovi attributi e forzando i mezzi per la verificazione dell'identità. Il SSO permette ad un utente di accedere a risorse del network con una sola autenticazione. Citiamo alcuni servizi di Federated Identity Management: Point of contact, SSO, Trust services, Key services, Identity services, authorization, provisioning, management. 
+\subsubsection{Generic identity management architecture}
+Citiamo alcuni componenti fondamentali:
+\begin{itemize}
+    \item \textbf{Principal}: possessore dell'identità
+    \item \textbf{Identity provider}: associa informazioni di autenticazione con un principal
+    \item \textbf{Attribute service}: gestisce la creazione e manutenzione di attributi 
+    \item \textbf{Administrator}: assegna ruoli e permessi
+    \item \textbf{Data consumers}: ottengono e sfruttano i dati gestiti dagli identity providers
+\end{itemize}
+Una \textbf{identity federation} è un management di identità attraverso domini di sicurezza multipli, fornendo la condivisione di identità digitali. Non è possibile un controllo centralizzato, piuttosto è utile creare una federazione con standard e livelli di trust per condividere le identità ed eseguire l'identity mapping. 
+\subsection{X.509 Proxy Certificates}
+I certificati proxy X.509 risolvono due problemi: SSO e la delegation. Ad ogni stadio, c'è un requester che genera un proxy certificate, lo firma, e lo invia ad un service provider. L'utente può essere sempre identificato seguendo la catena di firme all'inverso. Più lunga è la catena, più alto il rischio che le credenziali siano ottenute e sfruttare da terze parti non autorizzate. Per questo, le operazioni di delegation vanno gestite con prudenza.
 \end{document}
