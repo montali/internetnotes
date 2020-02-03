@@ -335,4 +335,105 @@ Vari prodotti commerciali utilizzano questa tecnica di scambio chiavi, proposta 
 Una \textbf{primitive root} di un numero primo $p$ è una il cui modulo $p$ genera tutti gli interi da 1 a $p-1$.
 Se $a$ è la primitive root del numero primo $p$, allora i numeri $a mod p, a^2 mod p,...$ sono interi distinti da 1 a $p-1$ in qualche permutazione. Per ogni intero $b$ e primitive root $a$ del numero primo $p$, possiamo trovare un esponente tale che $b \equiv a^i (mod p)$. L'esponente $i$ è detto \textbf{logaritmo discreto} di $b$ in base $a, mod p$.
 Questo algoritmo è suscettibile ad attacchi man-in-the-middle.
+\section{Digital Signatures}
+\subsection{Principi delle firme digitali}
+Il risultato più importante della public key cryptography è la firma digitale, che fornisce un set di capacità di sicurezza difficilmente implementabili in altro modo. La firma digitale permette di autenticare messaggi tramite una funzione secura di hashing come SHA-512. 
+Per inviare un messaggio autenticato, gli appendiamo l'hash SHA, criptato con la chiave privata. In questo modo, il destinatario può calcolare l'hash del messaggio e vedere se l'hash coincide.
+La firma digitale deve avere le seguenti proprietà:
+\begin{itemize}
+    \item Deve verificare l'autore, la data e l'ora della firma
+    \item Deve autenticare i contenuti all'orario segnato
+    \item Dev'essere verificabile da terze parti per risolvere dispute
+\end{itemize}
+L'autenticazione protegge due parti che scambiano messaggi, da parti terze malintenzionate.
+\subsubsection{Tipi possibili di attacco}
+Ci sono più possibilità di attacco:
+\begin{itemize}
+    \item \textbf{Key-only attack}: l'attacker conosce solo la chiave pubblica del mittente
+    \item \textbf{Known message attack}: l'attacker ha un set di messaggi e le loro firme
+    \item \textbf{Generic chosen message attack}: l'attacker ottiene firme valide da A, per messaggi che non dipendono dalla chiave pubblica di A
+    \item \textbf{Directed chosen message attack}: simile a quello sopra, ma i messaggi vengono scelti in base alla chiave pubblica di A
+    \item \textbf{Adaptive chosen message attack}: l'attacker richiede firme di messaggi che dipendono da quelle già ricevute
+\end{itemize}
+Elenchiamo anche i risultati ottenibili:
+\begin{itemize}
+    \item \textbf{Total break}: l'attacker ottiene la chiave privata
+    \item \textbf{Universal forgery}: l'attacker trova un modo efficiente di costruire firme su messaggi arbitrari
+    \item \textbf{Selective forgery}: l'attacker crea una firma per un particolare messaggio 
+    \item \textbf{Existential forgery}: l'attacker crea una firma su un messaggio, non scelto da lui
+\end{itemize}
+\subsubsection{Requirements}
+Abbiamo diversi requirements: la firma dev'essere un bit pattern dipendente dal messaggio, ed utilizzare informazioni conosciute al solo mittente. Dev'essere facile da costruire/verificare, ma non imitabile. Dev'essere inoltre facile da salvare.
+\subsubsection{Digital Signature + Confidentiality}
+La confidentiality può essere ottenuta criptando l'intero messaggio assieme alla firma, con una chiave segreta condivisa. È importante codificare l'insieme e non il solo messaggio prima della firma. In caso di dispute, una terza parte controlla il messaggio e la firma.
+\subsection{Approcci alla firma digitale}
+\subsubsection{Approccio RSA}
+Nell'approccio RSA, il messaggio è hashato con risultato di lunghezza fissa. A questo punto, viene criptato l'hash utilizzando la chiave privata. Il destinatario riceve il messaggio e lo hasha, per verificare se coincide.
+\subsubsection{Elgamal Digital Signature scheme}
+Se $\alpha$ è una primitive root del numero primo $q$, abbiamo che i numeri $\alpha mod q, \alpha^2 mod q,...$ sono interi distinti da $1$ a $q-1$ in qualche permutazione. È dimostrabile che, se $\alpha$ è primitive root di $q$, per ogni intero $m$, $\alpha^m \equiv 1 (mod q)$ iff $m \equiv 1 (mod q-1)$, per ogni coppia di interi $i,j$, $\alpha^i \equiv \alpha^j (mod q)$ iff $i \equiv j (mod q-1)$.
+L'utente genera una coppia di chiavi così:
+\begin{enumerate}
+    \item Genera un intero random $X_A$ tale che $1 < X_A < q-1$
+    \item Calcola $Y_A = \alpha^{X_A} mod q$
+    \item La chiave privata di $A$ è $X_A$, la pubblica $\{q,\alpha,Y_A\}$
+\end{enumerate}
+Il calcolo di $X_A$ da $Y_A$ è estremamente complesso, in quanto richiede la risoluzione di un logaritmo discreto.
+Per firmare un messaggio $M$, l'utente $A$ computa l'hash $m=H(M)$, in modo che $m$ sia un intero $0 \le m \le q-1$. Poi forma la firma digitale così:
+\begin{enumerate}
+    \item Sceglie un intero $K$ tale che $1 \le K \le q-1$ e $GCD(K,q-1)=1$
+    \item Calcola $S_1 = \alpha^K mod q$
+    \item Calcola $K^{-1} mod (q-1)$
+    \item Calcola $S_2 = K^{-1}(m-X_AS_1) mod (q-1)$
+\end{enumerate}
+Ogni utente può verificare così la firma:
+\begin{enumerate}
+    \item Calcola $V_1 = \alpha^m mod q$
+    \item Calcola $V_2 = (Y_A)^{S_1}(S_1)^{S_2} mod q$
+    \item La firma è valida se $V_1 = V_2$
+\end{enumerate} 
+\subsubsection{Schnorr Digital Signature Scheme}
+Lo schema Schnorr minimizza la quantità di computazione necessaria per la generazione della firma: il lavoro principale non dipende dal messaggio e può essere fatto nell'idle time del processore. Il processo è basato sull'utilizzo di un numero primo $p$, con $p-1$ avente un fattore primo $q$ di dimensione appropriata. Tipicamente, $p$ è un numero a 1024-bit, e $q$ a 160 bit.
+L'utente A genera una coppia di chiavi così:
+\begin{enumerate}
+    \item Sceglie i numeri primi $p$ e $q$, tali che $q$ sia un fattore primo di $p-1$
+    \item Sceglie un intero $a$, tale che $a^q= 1 mod p$
+    \item Sceglie un intero random $s$ con $0<s<q$, con $s$ chiave privata di A
+    \item Calcola $v=a^{-s} mod p$ con $v$ chiave pubblica di A
+\end{enumerate}
+Genera poi la firma così:
+\begin{enumerate}
+    \item Sceglie un intero random $r$ con $0<r<q$, calcola $x = a^r mod p$
+    \item Concatena $M$ con $x$ e hasha il risultato per calcolare il valore $e = H(M || x)$
+    \item Calcola $y = (r+se) mod q$
+    \item La firma digitale consiste in $(e,y)$
+\end{enumerate}
+Ogni altro user può verificare la firma semplicemente:
+\begin{enumerate}
+    \item Calcola $x' = a^y v^e mod p$
+    \item Verifica che $e=H(M || x')$
+\end{enumerate}
+\subsection{Standard NIST per la firma digitale}
+Basato su DSA, deriva dagli schemi Elgamal e Schnorr: anche qui si tratta di logaritmi discreti. L'hash code viene inviato a una funzione di firma ssieme ad un intero random k. La funzione di firma dipende anche dalla chiave privata e da un set di parametri detto \textit{group of communicating principals}. Consideriamo questo set come una chiave pubblica globale. Il risultato è una firma composta da due componenti, $s$ e $r$. Quando viene ricevuto il messaggio, si genera l'hash e lo si invia a una funzione di verification assieme alla firma. La funzione di verification dipende anche dalla global public key e dalla public key del mittente, accoppiata con la chiave privaria del ricevente. L'output è un valore uguale a $r$ se la firma è valida. 
+\subsubsection{Componenti}
+La chiave globale pubblica è composta da:
+\begin{itemize}
+    \item $p$ numero primo $2^{L-1} < p < 2^L$, con $512 \le L \le 1024$, ed $L$ multiplo di 64
+    \item $q$ divisore primo di $p-1$, dove $2^{N-1} < q < 2^N$
+    \item $g=h^{p-1/q} mod p > 1$ 
+\end{itemize}
+La chiave privata è composta da un valore $x$ random o pseudorandom, con $0 < x < q$
+La chiave pubblica è pari a $g^x mod p$
+Il numero segreto $k$ è random o pseudorandom, con $0<k<q$ (dovrebbe essere unico per ogni firma)
+Per la firma, abbiamo la coppia $(r,s)$ definita da:
+\begin{displaymath}
+    r = (g^k mod p) mod q \hspace{10px}s = \left[k^{-1}(H(M) + xr) \right] mod q
+\end{displaymath}
+Verifichiamo così:
+\begin{displaymath}
+    w = s^{-1} mod q \hspace{5px} u_1= \left[H(M')w\right] mod q \hspace{5px}u_2 = r'w mod q
+\end{displaymath}
+\begin{displaymath}
+    v= \left[(g^{u_1}y^{u_2} mod p)\right] mod q
+\end{displaymath}
+Se $v=r'$ la firma è valida.
 \end{document}
