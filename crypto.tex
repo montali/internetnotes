@@ -6,6 +6,7 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{hyperref}
+\usepackage{verbatim}
 \usepackage{glossaries}
 \usepackage{dirtytalk}
 \usepackage{wrapfig}
@@ -481,7 +482,7 @@ I certificates sono spesso usati in web transactions (HTTPS), VPN (IPSec), messa
 Possiamo introdurre anche una struttura gerarchica di authorities che facciano capo ad una sola root. 
 \subsubsection{X.509}
 X.509 è uno standard per la definizione di directory services, definendo un framework per i servizi della stessa. Ogni certificato contiene la chiave pubblica ed è firmato con la chiave privata dell'authority. Il formato X.509 è utilizzato in S/MIME, IPSec, SSL/TLS\dots
-La versione corrente di X.509 non specifica un algoritmo di firma, spesso si usa DSA. La notazione standard per i certificati X.509 è \code{CA $<<$A$>>$ = CA \{V, SN, AI, CA, UCA, A, UA, Ap, TA\}}. Solitamente, un nuovo certificato viene generato prima della scadenza del vecchio. È anche possibile revocare certificati in situazioni di necessità; ogni CA deve mantenere una lista dei certificati revocati, ma non di quelli scaduti. 
+La versione corrente di X.509 non specifica un algoritmo di firma, spesso si usa DSA. La notazione standard per i certificati X.509 è \verb|CA $<<$A$>>$ = CA {V, SN, AI, CA, UCA, A, UA, Ap, TA}|. Solitamente, un nuovo certificato viene generato prima della scadenza del vecchio. È anche possibile revocare certificati in situazioni di necessità; ogni CA deve mantenere una lista dei certificati revocati, ma non di quelli scaduti. 
 \subsection{Public Key Infrastructure}
 Una PKI è un set di hw, sw, persone, policies e procedure utili alla gestione di certificati basati su crittografia asimmetrica. Il gruppo IETF PKIX lavora quotidianamente al miglioramento di un modello basato su X.509 per l'utilizzo su internet.
 
@@ -524,4 +525,70 @@ Citiamo alcuni componenti fondamentali:
 Una \textbf{identity federation} è un management di identità attraverso domini di sicurezza multipli, fornendo la condivisione di identità digitali. Non è possibile un controllo centralizzato, piuttosto è utile creare una federazione con standard e livelli di trust per condividere le identità ed eseguire l'identity mapping. 
 \subsection{X.509 Proxy Certificates}
 I certificati proxy X.509 risolvono due problemi: SSO e la delegation. Ad ogni stadio, c'è un requester che genera un proxy certificate, lo firma, e lo invia ad un service provider. L'utente può essere sempre identificato seguendo la catena di firme all'inverso. Più lunga è la catena, più alto il rischio che le credenziali siano ottenute e sfruttare da terze parti non autorizzate. Per questo, le operazioni di delegation vanno gestite con prudenza.
+
+\section{Transport-Level Security}
+\subsection{Web Security}
+Tutte le organizzazioni hanno un sito web. Il server che li hosta è un punto di accesso alla rete interna. Questo porta a grandi rischi. Distinguiamo tra passive ed active threats, e li cataloghiamo in base alla location: sul web server, sul browser, nella rete. 
+Al livello di rete, abbiamo IPSec, che è a general purpose, trasparente agli end users/applications. SSL o TLS, sono sempre general purpose ma al livello di trasporto.
+\subsection{Transport Layer Security}
+Definito in RFC 8446, TLS 1.3 è uno standard sviluppato a partire dal protocollo commerciale Secure Sockets Layer (SSL). Nonostante SSL sia ancora usato, è in stato deprecated. TLS è un servizio general purpose, implementato su un set di protocolli basati su TCP. Praticamente tutti i browser lo supportano. Il protocollo \textbf{TLS Record} fornisce servizi di sicurezza basic ai protocolli di livello più alto come HTTP. TLS include anche i protocolli \textbf{Handshake}, \textbf{Change Cipher Spec}, \textbf{Alert}. Il protocollo \textbf{Heartbeat} è definito in un RFC separato. 
+\subsubsection{Architettura TLS}
+Elenchiamo gli elementi architetturali di TLS:
+\begin{itemize}
+    \item \textbf{Client}: l'endpoint che inizia la connessione 
+    \item \textbf{Connection}: una connessione a livello di trasporto tra 2 endpoints
+    \item \textbf{Endpoint}: il client o il server della connessione
+    \item \textbf{Handshake}: una negoziazione iniziale tra client e server, che stabilisce i parametri delle successive interazioni attraverso TLS
+    \item \textbf{Peer}: un endpoint. Quando discutiamo un particolare endpoint, ci riferiamo all'altro con peer 
+    \item \textbf{Receiver}: un endpoint che riceve records
+    \item \textbf{Sender}: un endpoint che trasmette records 
+    \item \textbf{Server}: l'endpoint che non ha iniziato la connessione 
+    \item \textbf{Session}: un'associazione tra un client e un server. Le sessioni sono create dal protocollo handshake, e definiscono un set di parametri di sicurezza 
+\end{itemize}
+Per mitigare la latenza e i costi computazionali dell'handshake, \textbf{TLS Session Resumption} fornisce un meccanismo per reiniziare o condividere la stessa secret key tra più connessioni. Il session state è definito da più parametri:
+\begin{itemize}
+    \item Session identifier 
+    \item Peer certificate 
+    \item Cipher spec 
+    \item Master secret
+\end{itemize}
+Una richiesta TLS per stabilire una connessione inizia con lo stabilimento di una connessione TCP tra le entità, il cui connection state dipende da:
+\begin{itemize}
+    \item Server write MAC secret
+    \item Client write MAC secret 
+    \item Server write key (chiave simmetrica)
+    \item Client write key (chiave simmetrica)
+    \item Initialization Vectors (IVs)
+    \item Sequence numbers
+\end{itemize}
+\subsubsection{TLS Record Protocol}
+\textbf{TLS Record Protocol} fornisce due servizi per le connessioni TLS, \textbf{confidenzialità} (tramite l'handshake protocol, che definisce una secret key), e \textbf{message integrity} (che definisce una chiave segreta condivisa per il Message Authentication Code). Il protocollo Record prende un messaggio applicativo, lo frammenta in blocchi, lo comprime (opzionale), applica un MAC, cripta, aggiunge un header e trasmette il risultato. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{res/crypto/TLSRecord.png}
+\end{figure}
+\subsubsection{Change Cipher Spec Protocol}
+\textbf{Change Cipher Spec Protocol} consiste in un singolo messaggio, composto da un singolo byte con valore 1. CCS comunica al peer che il mittente vuole scambiare un nuovo set di chiavi, create poi con le informazione scambiate dall'handshake protocol. 
+\subsubsection{Alert Protocol}
+Alert Protocol è usato per convogliare gli alert di TLS ai pper. Ogni messaggio consiste in due byte, il primo contenente il valore \textit{warning} (1) o \textit{fatal} (2), nel secondo caso terminante la connessione. Il secondo byte contiene un codice che indica l'alert specifico. 
+Alcuni esempi possono essere: \verb|unexpected_message|, \verb|bad_record_mac|, \verb|decompression_failure|, \verb|handshake_failure|, \verb|illegal_parameter|.
+\subsubsection{Handshake protocol}
+Il protocollo di \textbf{handshake} è la parte più complessa di TLS, che permette al server ed al client di autenticarsi a vicenda e negoziare un'encryption, un algoritmo MAC e delle chiavi crittografiche. Viene utilizzato prima di tutto il resto, e ha messaggi $\ge 4$ bytes (1 byte per il type, 3 byte per la lunghezza, ed il payload). Si divide in 4 fasi:
+\begin{enumerate}
+    \item Stabilire le capabilities di sicurezza
+    \item Autenticazione del server e scambio di chiavi 
+    \item Autenticazione del client e scambio di chiavi 
+    \item Fine
+\end{enumerate}
+Alcuni messaggi, ad esempio, possono essere \begin{verbatim}
+    hello_request, client_hello, server_hello, client_hello, certificate, server_key_exchange,
+    certificate_request, server_done, certificate_verify, client_key_exchange, finished
+\end{verbatim}. 
+Il protocollo supporta più metodi di key exchange, come (EC)DHE, PSK, PSK+ECDHE, un cipher algorithm (AEAD), ed i MAC algorithms basati su HMAC. 
+\subsubsection{Heartbeat protocol}
+Il protocollo heartbeat è solitamente utilizzato per monitorare la disponibilità di un'entity. Gira sopra TLS Record e consiste di due tipologie di messaggi, \verb|heartbeat request| e \verb|heartbeat response|. Una request può essere inviata sempre, e quando ricevuta richiede una response. Il payload sono dati casuali, poi reinviati nella response per sicurezza.
+\subsection{OpenSSL}
+OpenSSL è un toolkit robusto per TLS e SSL, includendo anche una libreria general purpose per la crittografia.
+\subsection{HTTPS} 
+HTTPS significa \textbf{HTTP over SSL/TLS} e si riferisce alla comunicazione basata su HTTP+SSL. Le capacità HTTPS sono presenti in tutti i moderni browser; la porta utilizzata è la 443 e non più la 80. Quando viene usato, sono criptati: l'URL, i contenuti, i forms (POST), i cookies, gli header HTTP. Per HTTPS il client HTTP è anche il client TLS: si svolge prima una TLS connection request, poi TCP connection request. Da qui, si comincia il TLS Handshake ed i dati HTTP vengono inviati come TLS application data. La chiusura della connessione HTTPS richiede che TLS chiuda la connessione con l'entità peer TLS. 
 \end{document}
