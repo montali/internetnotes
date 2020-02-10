@@ -236,19 +236,39 @@ InvMixColumns è definita da una diversa moltiplicazione tra matrici.
 \paragraph{Key expansion} La key expansion prende in input una chiave a 16 byte (4 parole) e produce un array lineare di parole. In AES128 l'array ha 44 elementi. 
 
 \subsubsection{Sicurezza di AES}
-Il brute force è improbabile: già solo con chiavi a 128 bit, abbiamo $3.4\cdot 10^38$ chiavi possibili. 
+Il brute force è improbabile: già solo con chiavi a 128 bit, abbiamo $3.4\cdot 10^{38}$ chiavi possibili. 
 \subsection{Metodi di encrypting di grandi messaggi}
 Solitamente, abbiamo una quantità di dati arbitraria. NIST ha pubblicato 5 modalità: ECB, CBC, OFB, CFB, CM. A volte è necessario del padding per raggiungere una lunghezza specifica: bit padding (1 poi 0 necessari), ANSI X.923 (ultimo byte che definisce lunghezza del padding, gli altri 0), RFC 5652 (ogni byte contiene la lunghezza del padding). 
 \subsubsection{Electronic Code Book}
 ECB rompe il messaggio in $n$ blocchi di dimensione $b$ con padding per l'ultimo. Ogni blocco è criptato indipendentemente con chiave $K$. ECB è molto semplice e non introduce operazioni extra, ma potrebbero apparire ripetizioni, è vulnerabile alle similarities tra ct e agli attacchi con conoscenza parziale del plaintext.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{res/crypto/ECB.png}
+\end{figure}
 \subsubsection{Cipher Block Chaining}
 CBC utilizza un Initialization Vector per fare in modo che due blocchi uguali diano ct diversi. Ha decryption semplice, ct dipendente da tutti i messaggi precedenti, ottime performance. Però, un valore IV costante potrebbe portare a problemi.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{res/crypto/CBC.png}
+\end{figure}
 \subsubsection{Output FeedBack}
 Anche in OFB, il ct è funzione del precedente plaintext, con una nonce. I vantaggi sono due: la sequenza pseudorandom può essere generata in anticipo, e c'è possibilità di criptare messaggi di lunghezza variabile. Però, dobbiamo usare sempre la stessa sequenza pseudorandom (come un OTP), e sender/receiver devono essere sincronizzati. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{res/crypto/OFB.png}
+\end{figure}
 \subsubsection{Cipher FeedBack}
 In CFB il plaintext è diviso in segmenti di s bits, piuttosto che in blocchi. Come OFB, la sequenza può essere generata in anticipo, ma ha gli stessi problemi. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{res/crypto/CFB.png}
+\end{figure}
 \subsubsection{Counter Mode}
 CM è simile a OFB, la sequenza di counter deve avere la proprietà di blocchi diversi tra loro. Ha vari vantaggi: le funzioni forward cipher possono essere applicate ai counter prima della disponibilità del plaintext, le funzioni di cipher possono essere eseguite in parallelo, il plaintext block che corrisponde a un ct può essere recuperato indipendentemente dagli altri. Ha, però, limitazioni: non dobbiamo usare mai la stessa counter sequence, e sender/receiver devono essere sincronizzati.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{res/crypto/CM.png}
+\end{figure}
 \subsection{Utilizzi principali della secret key cryptography}
 La secret key cryptography ricopre soprattutto confidentiality e authentication: nella prima, possiamo trasmettere su un canale poco sicuro e salvare dati su storage poco sicuro. Per la seconda, possiamo autenticare utenti tramite un meccanismo challenge-response.
 Abbiamo alcuni svantaggi: richiede sempre un metodo sicuro per lo scambio di chiavi, ed in caso di chiavi permanenti pre-shared il numero totale di chiavi per N users è $N(N-1)/2$, che è troppo.
