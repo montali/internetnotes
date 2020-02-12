@@ -66,7 +66,7 @@ Definiamo alcuni termini:
 \paragraph{Threat} Il potenziale per una violazione di sicurezza, che esiste quando c'è una circostanza, possibilità, azione o evento che potrebbe mettere a rischio la sicurezza.
 \paragraph{Attack} Un assalto alla sicurezza di sistema che deriva da un intelligent threat, ossia un tentativo deliberato di evadere i sistemi di sicurezza.
 \subsection{Security attacks}
-Gli \textbf{attacchi attivi} coinvolgono qualche modifica del data stream, mentre quelli passivi sono di 4 tipi:
+Gli \textbf{attacchi attivi} coinvolgono qualche modifica del data stream, ne citiamo 4 tipi:
 \begin{itemize}
     \item \textbf{spoofing}: attacca l'authenticity
     \item \textbf{tampering}: attacca l'integrity 
@@ -434,7 +434,7 @@ Ogni altro user può verificare la firma semplicemente:
     \item Verifica che $e=H(M || x')$
 \end{enumerate}
 \subsection{Standard NIST per la firma digitale}
-Basato su DSA, deriva dagli schemi Elgamal e Schnorr: anche qui si tratta di logaritmi discreti. L'hash code viene inviato a una funzione di firma assieme ad un intero random k. La funzione di firma dipende anche dalla chiave privata e da un set di parametri detto \textit{group of communicating principals}. Consideriamo questo set come una chiave pubblica globale. Il risultato è una firma composta da due componenti, $s$ e $r$. Quando viene ricevuto il messaggio, si genera l'hash e lo si invia a una funzione di verification assieme alla firma. La funzione di verification dipende anche dalla global public key e dalla public key del mittente, accoppiata con la chiave privata del ricevente. L'output è un valore uguale a $r$ se la firma è valida. 
+Basato su DSA, deriva dagli schemi Elgamal e Schnorr: anche qui si tratta di logaritmi discreti. L'hash code viene inviato a una funzione di firma assieme ad un intero random k. La funzione di firma dipende anche dalla chiave privata e da un set di parametri determinato dal \textit{group of communicating principals}, fungente da chiave pubblica globale. Consideriamo questo set come una chiave pubblica globale. Il risultato è una firma composta da due componenti, $s$ e $r$. Quando viene ricevuto il messaggio, si genera l'hash e lo si invia a una funzione di verification assieme alla firma. La funzione di verification dipende anche dalla global public key e dalla public key del mittente, accoppiata con la chiave privata del ricevente. L'output è un valore uguale a $r$ se la firma è valida. 
 \subsubsection{Componenti}
 La chiave globale pubblica è composta da:
 \begin{itemize}
