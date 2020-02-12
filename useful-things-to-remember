@@ -181,4 +181,73 @@ Approcci alla firma digitale
 	Standard NIST
 		Deriva su ElGamal e Schnorr, è basato su DSA
 		Chiave pubblica globale
+
+Distribuzione simmetrica delle chiavi
+	Unica alternativa valida allo scambio fisico di chiavi è la presenza di un KDC
+	Key Distribution Center
+	Lifetime delle chiavi
+	Transparent Key Control
+	Decentralized Key Control
 	
+Distribuzione simmetrica usando encryption asimmetrica
+	Distribuzione delle chiavi
+		Public announcement: innaffidabile
+		Publicly Available Directory
+		Public-Key Certificates
+			X.509
+
+Public Key Infrastructure
+	
+User Authentication
+	RFC 4949
+		Identification
+		Verification
+	Standard NIST 
+		Electronic user authentication
+			Registration Authority
+			Credential Service Provider
+			Claimant/Verifier
+
+Metodi di autenticazione
+	Qualcosa che conosco
+	Qualcosa che ho
+	Qualcosa che faccio
+	Qualcosa che sono
+
+Lamport's OTP
+
+Mutual authentication
+	Replay attacks
+		Nonce
+		Timestamps
+
+Federated identity management
+	Generic identity management architecture
+		Principal
+		Identity Provider
+		Attribute Service
+		Administrator
+		Data Consumers
+		Identity Federation
+
+X.509 Proxy Certificate
+	SSO
+	Delegation
+
+Web Security
+	IPSec
+	TLS
+
+Transport Layer Security
+	TLS 1.3
+	SSL
+	Protocolli
+		Record
+			Confidentiality+Integrity
+		Change Cipher Spec Protocol
+		Alert Protocol
+		Handshake Protocol
+		Heartbeat Protocol
+	OpenSSL
+
+HTTP over SSL/TLS
