@@ -1,0 +1,184 @@
+What is computer security?
+	Confidentiality
+	Integrity
+	Availability
+	Authenticity
+	Accountability
+
+OSI Security Architecture
+	Security attack
+	Security mechanism
+	Security service
+	Threat
+	Attack
+	
+Attacks
+	Spoofing
+	Tampering
+	Replay/Reflection
+	DoS
+
+Security design principles
+	Economy of mechanism
+	Fail-safe defaults
+	Complete mediation
+	Open design
+	Separation of privileges
+	Least privilege
+	Least common mechanism
+	Psychological acceptability
+	Isolation
+	Modularity
+	Layering
+
+Attacks
+	Attack surface
+	Attack tree
+
+Secret Key Cryptography
+	Plaintext
+	Ciphertext
+	Cryptanalysis
+	Brute Force
+	Side channel attack
+	
+Tipi di attacco alla secret key crypto
+	Ciphertext only
+	Known plaintext attack
+	Chosen plaintext/ciphertext attack
+
+Tecniche di encryption classiche
+	Cifrario di Cesare
+	Monoalphabetic cipher
+	Multiletter cipher
+	Polyalphabetic cipher
+	One-time pad
+	Row transposition
+	Product cipher 
+	
+Block vs Stream cipher
+	Ideal block cipher
+
+Feistel cipher
+	Sostituzione/Permutazione
+	Diffusione/Confusione
+	
+DES/DEA
+	Feistel
+	Key Transformation
+	Initial Permutation
+	16 round
+	Double DES
+		Meet-in-the-middle attacks
+	3DES
+
+AES
+	Rijndael cipher?
+	State Array
+	Operations
+		SubBytes
+		MixColumns
+		ShiftRows
+		AddRoundKey
+		Key expansion
+	Finite fields
+
+Metodi di padding
+	Bit padding
+	ANSI X.923
+	RFC 5652
+
+Metodi di encoding di grandi messaggi
+	Electronic Code Book
+	Cipher Block Chaining
+	Output Feedback
+	Cipher Feedback
+	Counter Mode
+
+Hash functions
+	Cryptographic hash function
+	Message authentication
+	Preimage
+
+Requisiti di sicurezza
+	Variable input size
+	Fixed output size
+	Efficiency
+	Preimage resistant
+	Second preimage resistant
+	Collision resistant	
+	Pseudorandomness
+
+Secure Hash Algorithm
+	SHA-1 
+		Funzioni: Ch, Parity, Maj, Parity
+	SHA-2
+	Keccak (SHA-3)
+		Cryptographic sponge function
+	
+Message Authentication Code
+	
+Data Authentication Algorithm
+	DES-CBC con IV=0 e zero-pad. Spedisce solo il blocco finale
+	
+Public Key Cryptography
+	Confidentiality
+	Authentication
+	Trapdoor one-way function
+
+Cryptanalysis
+	Brute force
+	Trovare la private da public
+	Probable message attack
+
+RSA
+	C=M^e mod n
+	M=C^d mod n
+	PU=e,n
+	PR=d,n
+
+Calcolo dei parametri di RSA
+	p,q primi
+	n = pq
+	phi(n) = (p-1)(q-1)
+	GCD(phi,e)=1
+	ed=1 mod phi
+
+Possibili attacchi ad RSA
+	Mathematical attack
+	Timing attack
+	Brute force
+	Hardware fault based attack
+	Chosen ciphertext attack
+
+Diffie-Hellman Key Exchange
+	Cos'è una primitive root?
+	Cos'è un logaritmo discreto?
+	
+Digital Signatures
+	Possibili attacchi
+		Key-only attack
+		Known message attack
+		Generic chosen message attack
+		Directed chosen message attack
+		Adaptive chosen message attack
+	Risultati agli attacchi
+		Total break
+		Universal forgery
+		Selective forgery
+		Existential forgery
+
+Approcci alla firma digitale
+	Approccio RSA
+		Hash di lunghezza fisso, criptato con prkey
+	Schema ElGamal
+		Ya=a^Xa mod q
+	Schema Schnorr
+		Computazionalmente?
+		s chiave privata random
+		v = a^-s mod p chiave pubblica
+		Hash appeso al messaggio
+	Standard NIST
+		Deriva su ElGamal e Schnorr, è basato su DSA
+		Chiave pubblica globale
+	
