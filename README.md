@@ -1,5 +1,5 @@
 # internetnotes
-Riassunti per l'esame di Tecnologie Internet @UniPR, A.A. 2019-2020
+Riassunti per l'esame di Tecnologie Internet @UniPR del prof. **Michele Amoretti**, A.A. 2019-2020
 
 ## File presenti
 I riassunti sono divisi in due parti, come l'esame
